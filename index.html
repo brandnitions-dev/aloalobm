@@ -155,6 +155,71 @@
   .mc-stat{font-size:20px;font-weight:700;color:var(--gold);line-height:1;}
   .mc-sl{font-size:9px;color:var(--dim);margin-bottom:8px;}
   .mc-line{font-size:10px;color:var(--dim);padding:2px 0;border-top:1px solid var(--border);margin-top:4px;}
+
+  /* MOBILE RESPONSIVE */
+  .menu-btn{display:none;background:none;border:1px solid var(--border);color:var(--dim);font-family:inherit;font-size:18px;padding:4px 8px;cursor:pointer;border-radius:2px;margin-right:8px;}
+  .menu-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;opacity:0;transition:opacity .2s;}
+  .sidebar-overlay.active{display:block;opacity:1;}
+
+  @media (max-width:900px){
+    .titlebar{padding:8px 12px;gap:6px;}
+    .title-text{font-size:9px;letter-spacing:1px;}
+    .title-text .brand{font-size:11px;}
+    .lang-bar{flex-wrap:wrap;gap:3px;}
+    .lb{padding:2px 6px;font-size:10px;}
+    .lb .fl{font-size:12px;}
+    .theme-btn{padding:2px 8px;font-size:10px;margin-left:6px;}
+    .sidebar{width:170px;padding:10px 0;}
+    .sb-label{font-size:8px;padding:2px 10px;}
+    .sb-item{padding:5px 10px 5px 12px;font-size:10px;}
+    .content{padding:16px 18px;}
+    .sh{font-size:9px;}
+    .bstat{min-width:110px;padding:10px 12px;}
+    .bsv{font-size:20px;}
+    .tier-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .camp-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .mkt-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .split{flex-direction:column;gap:12px;}
+    .vline{display:none;}
+    .split>div{width:100%;}
+    .tt{font-size:11px;}
+    .tt th,.tt td{padding:5px 6px;}
+    .line{flex-direction:column;gap:2px;}
+    .key{min-width:auto;font-size:11px;}
+    .val{font-size:11px;}
+    .statusbar{flex-wrap:wrap;gap:8px;padding:4px 10px;}
+    .sb-r{width:100%;justify-content:center;margin-top:4px;}
+  }
+
+  @media (max-width:650px){
+    .menu-btn{display:flex;align-items:center;justify-content:center;}
+    .sidebar{position:fixed;left:-220px;top:0;bottom:0;width:200px;z-index:200;transition:left .25s ease;box-shadow:2px 0 10px rgba(0,0,0,.3);}
+    .sidebar.open{left:0;}
+    .body{flex-direction:column;}
+    .content{padding:14px 12px;}
+    .titlebar{flex-wrap:wrap;}
+    .title-text{order:3;width:100%;margin-top:8px;}
+    .lang-bar{order:2;margin-left:auto;}
+    .theme-btn{order:1;margin-left:0;}
+    .dots{display:flex;gap:4px;}
+    .tier-grid{grid-template-columns:1fr;gap:10px;}
+    .camp-grid{grid-template-columns:1fr;gap:10px;}
+    .mkt-grid{grid-template-columns:1fr;gap:10px;}
+    .stats-row{flex-direction:column;}
+    .bstat{width:100%;}
+    .tt{display:block;overflow-x:auto;white-space:nowrap;}
+    .statusbar{font-size:9px;gap:6px;padding:4px 8px;}
+    .statusbar>span:first-child{display:none;}
+    .sb-r{gap:10px;}
+    .callout{padding:8px 10px;font-size:10px;}
+    .tier{padding:14px 12px;}
+    .tier-val{font-size:18px;}
+    .ccard{padding:12px;}
+    .mkt-card{padding:12px;}
+    .mc-flag{font-size:18px;}
+    .mc-stat{font-size:16px;}
+  }
 </style>
 </head>
 <body>
@@ -162,6 +227,7 @@
 
   <!-- TITLEBAR -->
   <div class="titlebar">
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
     <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
     <div class="title-text"><span class="brand">AloAlo</span> · Powered by Motely Peers FZCO · Business Model</div>
     <div class="lang-bar">
@@ -174,6 +240,8 @@
   </div>
 
   <div class="body">
+
+  <div class="sidebar-overlay" onclick="toggleMenu()"></div>
 
     <!-- SIDEBAR -->
     <div class="sidebar">
@@ -1056,6 +1124,14 @@ function go(id){
   document.querySelectorAll('.sb-item')[panels.indexOf(id)].classList.add('active');
   document.getElementById('sb-panel').textContent=id.toUpperCase();
   document.querySelector('.content').scrollTop=0;
+  // Close mobile menu after navigation
+  document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.sidebar-overlay').classList.remove('active');
+}
+
+function toggleMenu(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.querySelector('.sidebar-overlay').classList.toggle('active');
 }
 </script>
 </body>
