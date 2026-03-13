@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AloAlo — Business Model Terminal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+  :root {
+    --bg:#F2F2EE;--bg2:#E8E8E4;--bg3:#EEEEE9;--border:#CCCCC6;
+    --text:#1A1A1A;--dim:#888;--card:#FFFFFF;
+    --gold:#8A6520;--gold2:#A07830;--green:#007A52;--blue:#1A60BB;
+    --red:#BB2020;--purple:#6030BB;--teal:#007A7A;
+  }
+  body.dark {
+    --bg:#0C0C0C;--bg2:#111;--bg3:#0E0E0E;--border:#1E1E1E;
+    --text:#E8E8E8;--dim:#555;--card:#111;
+    --gold:#C9A84C;--gold2:#E8C97A;--green:#00E5A0;--blue:#4C9EFF;
+    --red:#FF5C5C;--purple:#B07EFF;--teal:#00D4D4;
+  }
+
+  html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;height:100%;overflow:hidden;transition:background .2s,color .2s;}
+  body.dark::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px);pointer-events:none;z-index:9999;}
+
+  .terminal{display:flex;flex-direction:column;height:100vh;}
+
+  .titlebar{background:var(--bg2);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#FF5F57}.dot.y{background:#FFBD2E}.dot.g{background:#28CA41}
+  .title-text{flex:1;text-align:center;color:var(--dim);font-size:11px;letter-spacing:2px;text-transform:uppercase;}
+  .brand{font-weight:700;color:var(--gold);font-size:12px;margin-right:4px;}
+
+  .lang-bar{display:flex;gap:4px;align-items:center;}
+  .lb{background:none;border:1px solid var(--border);color:var(--dim);font-family:inherit;font-size:11px;padding:3px 9px;cursor:pointer;display:flex;align-items:center;gap:5px;border-radius:2px;transition:all .15s;}
+  .lb:hover,.lb.active{border-color:var(--gold);color:var(--gold);}
+  .lb.active{background:rgba(138,101,32,.08);}
+  .lb .fl{font-size:14px;line-height:1;}
+
+  .theme-btn{background:none;border:1px solid var(--border);color:var(--dim);font-family:inherit;font-size:11px;padding:3px 10px;cursor:pointer;margin-left:10px;border-radius:2px;transition:all .15s;}
+  .theme-btn:hover{border-color:var(--text);color:var(--text);}
+
+  .body{display:flex;flex:1;overflow:hidden;}
+
+  .sidebar{width:190px;background:var(--bg3);border-right:1px solid var(--border);flex-shrink:0;overflow-y:auto;padding:14px 0;}
+  .sb-sec{padding:2px 0 12px;}
+  .sb-label{padding:2px 14px;font-size:9px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;}
+  .sb-item{padding:6px 14px 6px 16px;font-size:11px;color:var(--dim);cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;border-left:2px solid transparent;transition:all .1s;}
+  .sb-item:hover{background:rgba(138,101,32,.05);color:var(--text);}
+  .sb-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(138,101,32,.06);}
+  .sb-item .ic{width:14px;text-align:center;font-size:11px;}
+
+  .content{flex:1;overflow-y:auto;padding:24px 30px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+  .content::-webkit-scrollbar{width:4px}.content::-webkit-scrollbar-thumb{background:var(--border)}
+  .panel{display:none}.panel.active{display:block}
+
+  .prompt{color:var(--dim);font-size:11px;margin-bottom:16px;}
+  .pu{color:var(--green)}.ph{color:var(--blue)}.pp{color:var(--purple)}.pc{color:var(--text)}.pa{color:var(--gold)}
+
+  .sh{color:var(--gold);font-size:9.5px;letter-spacing:3px;text-transform:uppercase;margin:0 0 14px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+
+  .stats-row{display:flex;flex-wrap:wrap;gap:0;margin-bottom:20px;}
+  .bstat{background:var(--card);border:1px solid var(--border);padding:13px 17px;min-width:130px;display:inline-flex;flex-direction:column;}
+  .bsv{font-size:24px;font-weight:700;line-height:1.1;}
+  .bsl{font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+  .bss{font-size:9px;color:var(--dim);margin-top:2px;}
+
+  .output{margin-bottom:20px;}
+  .line{display:flex;align-items:baseline;gap:10px;padding:3px 0;}
+  .key{color:var(--dim);min-width:220px;font-size:12px;}
+  .val{font-size:12px;}
+  .val.go{color:var(--gold);font-weight:700}.val.gr{color:var(--green);font-weight:700}
+  .val.bl{color:var(--blue);font-weight:700}.val.dm{color:var(--dim)}
+  .val.rd{color:var(--red);font-weight:700}.val.te{color:var(--teal);font-weight:700}
+
+  .tag{font-size:9px;padding:1px 7px;letter-spacing:1px;text-transform:uppercase;border-radius:2px;}
+  .rec{background:rgba(0,122,82,.07);color:var(--green);border:1px solid rgba(0,122,82,.2);}
+  .one{background:rgba(138,101,32,.07);color:var(--gold);border:1px solid rgba(138,101,32,.2);}
+  .use{background:rgba(26,96,187,.07);color:var(--blue);border:1px solid rgba(26,96,187,.2);}
+  .varr{background:rgba(96,48,187,.07);color:var(--purple);border:1px solid rgba(96,48,187,.2);}
+  .hot{background:rgba(187,32,32,.07);color:var(--red);border:1px solid rgba(187,32,32,.2);}
+
+  .tt{width:100%;border-collapse:collapse;margin-bottom:18px;}
+  .tt th{color:var(--gold);font-size:9px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);font-weight:400;}
+  .tt td{padding:7px 10px;font-size:12px;border-bottom:1px solid var(--border);color:var(--text);}
+  .tt tr:hover td{background:rgba(138,101,32,.03);}
+  .tt .ng{color:var(--green);font-weight:700}.tt .ng2{color:var(--gold);font-weight:700}.tt .dm{color:var(--dim);}
+  tr.hl td{background:rgba(0,122,82,.05)!important;}
+
+  /* TBA TIERS */
+  .tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+  .tier{background:var(--card);border:1px solid var(--border);padding:18px 16px;position:relative;}
+  .tier::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;}
+  .tier.t1::before{background:var(--dim)}
+  .tier.t2::before{background:var(--green)}
+  .tier.t3::before{background:var(--gold)}
+  .tier.t2{border-color:var(--green);box-shadow:0 0 0 1px rgba(0,122,82,.2);}
+  .tier-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .tier.t1 .tier-label{color:var(--dim)}
+  .tier.t2 .tier-label{color:var(--green)}
+  .tier.t3 .tier-label{color:var(--gold)}
+  .tier-val{font-size:22px;font-weight:700;line-height:1.1;margin-bottom:6px;}
+  .tier.t1 .tier-val{color:var(--dim)}
+  .tier.t2 .tier-val{color:var(--green)}
+  .tier.t3 .tier-val{color:var(--gold)}
+  .tier-desc{font-size:10px;color:var(--dim);line-height:1.5;margin-bottom:10px;}
+  .tier-includes{font-size:10px;color:var(--text);line-height:1.7;}
+  .tier-includes .ti{display:flex;gap:6px;align-items:baseline;}
+  .tier-includes .ti .chk{color:var(--green);}
+  .tier-badge{position:absolute;top:12px;right:12px;background:var(--green);color:#fff;font-size:8px;padding:2px 7px;letter-spacing:1px;font-weight:700;}
+
+  /* CAMPAIGN CARDS */
+  .camp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+  .ccard{background:var(--card);border:1px solid var(--border);padding:14px;position:relative;}
+  .ccard::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;}
+  .ccard.c1::before{background:var(--blue)}
+  .ccard.c2::before{background:var(--teal)}
+  .ccard.c3::before{background:var(--gold)}
+  .cc-n{font-size:9px;letter-spacing:2px;color:var(--dim);margin-bottom:4px;}
+  .cc-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .cc-target{font-size:10px;color:var(--dim);margin-bottom:10px;font-style:italic;}
+  .cc-stat{font-size:20px;font-weight:700;line-height:1;}
+  .cc-stat-l{font-size:9px;color:var(--dim);}
+
+  .split{display:flex;gap:20px;}
+  .split>div{flex:1;}
+  .vline{width:1px;background:var(--border);flex-shrink:0;}
+
+  .pb-wrap{margin:8px 0;}
+  .pb-row{display:flex;justify-content:space-between;margin-bottom:3px;}
+  .pb-l{color:var(--text);font-size:11px;}.pb-v{font-weight:700;font-size:11px;}
+  .pb{background:var(--border);height:5px;}
+  .pbf{height:100%;transition:width .5s ease;}
+
+  .cursor{display:inline-block;width:8px;height:14px;background:var(--green);animation:blink 1.1s step-end infinite;vertical-align:middle;margin-left:2px;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  hr.dv{border:none;border-top:1px solid var(--border);margin:18px 0;}
+
+  .statusbar{background:var(--gold);color:#fff;font-size:10px;padding:3px 14px;display:flex;gap:18px;align-items:center;flex-shrink:0;font-weight:700;letter-spacing:.3px;}
+  body.dark .statusbar{color:#000;}
+  .sb-r{margin-left:auto;display:flex;gap:16px;}
+
+  .callout{border:1px solid var(--green);background:rgba(0,122,82,.05);padding:10px 14px;margin-bottom:18px;font-size:11px;color:var(--text);line-height:1.6;}
+  .callout .co-label{font-size:9px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+
+  .mkt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+  .mkt-card{background:var(--card);border:1px solid var(--border);padding:14px 14px;position:relative;}
+  .mkt-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;}
+  .mkt-card.de::before{background:#000}
+  .mkt-card.fr::before{background:#002395}
+  .mkt-card.it::before{background:#009246}
+  .mc-flag{font-size:22px;margin-bottom:6px;}
+  .mc-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .mc-stat{font-size:20px;font-weight:700;color:var(--gold);line-height:1;}
+  .mc-sl{font-size:9px;color:var(--dim);margin-bottom:8px;}
+  .mc-line{font-size:10px;color:var(--dim);padding:2px 0;border-top:1px solid var(--border);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="terminal">
+
+  <!-- TITLEBAR -->
+  <div class="titlebar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <div class="title-text"><span class="brand">AloAlo</span> · Powered by Motely Peers FZCO · Business Model</div>
+    <div class="lang-bar">
+      <button class="lb active" onclick="setLang('en')"><span class="fl">🇬🇧</span> EN</button>
+      <button class="lb" onclick="setLang('fr')"><span class="fl">🇫🇷</span> FR</button>
+      <button class="lb" onclick="setLang('de')"><span class="fl">🇩🇪</span> DE</button>
+      <button class="lb" onclick="setLang('it')"><span class="fl">🇮🇹</span> IT</button>
+    </div>
+    <button class="theme-btn" id="tbtn" onclick="toggleTheme()">☾ Dark</button>
+  </div>
+
+  <div class="body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-sec">
+        <div class="sb-label" data-k="nav_sys">system</div>
+        <div class="sb-item active" onclick="go('overview')"><span class="ic">⬡</span><span data-k="nav_ov">overview</span></div>
+        <div class="sb-item" onclick="go('campaigns')"><span class="ic">◈</span><span data-k="nav_camp">campaigns</span></div>
+        <div class="sb-item" onclick="go('partners')"><span class="ic">⇄</span><span data-k="nav_part">partners</span></div>
+      </div>
+      <div class="sb-sec">
+        <div class="sb-label" data-k="nav_fin">financials</div>
+        <div class="sb-item" onclick="go('revenue')"><span class="ic">$</span><span data-k="nav_rev">revenue</span></div>
+        <div class="sb-item" onclick="go('markets')"><span class="ic">◉</span><span data-k="nav_mkt">markets</span></div>
+        <div class="sb-item" onclick="go('projections')"><span class="ic">↗</span><span data-k="nav_proj">projections</span></div>
+      </div>
+      <div class="sb-sec">
+        <div class="sb-label" data-k="nav_inv">investor</div>
+        <div class="sb-item" onclick="go('tba')"><span class="ic">◆</span><span data-k="nav_tba">TBA pitch</span></div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ══ OVERVIEW ══ -->
+      <div class="panel active" id="p-overview">
+        <div class="prompt"><span class="pu">root</span>@<span class="ph">aloalo</span>:<span class="pp">~/</span>$ <span class="pc">cat</span> <span class="pa">business-model.md</span></div>
+        <div class="sh" data-k="sh_ov">// ALOALO — SYSTEM OVERVIEW</div>
+
+        <div class="callout">
+          <div class="co-label" data-k="co_what">WHAT WE DO</div>
+          <span data-k="co_body">We generate opted-in elderly homeowner leads via ads, qualify them with AI, send field partners to their home to sign Leibrente / Viager contracts, then sell those contracts to investment funds for commission — while upselling care services at the same visit.</span>
+        </div>
+
+        <div class="stats-row">
+          <div class="bstat"><div class="bsv" style="color:var(--green)">29.5M</div><div class="bsl" data-k="s1l">Elderly Homeowners</div><div class="bss" data-k="s1s">DE + FR + IT combined</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--gold)">3</div><div class="bsl" data-k="s2l">AI Campaigns</div><div class="bss" data-k="s2s">consumer · partners · funds</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--blue)">€15–20K</div><div class="bsl" data-k="s3l">Avg Origination Fee</div><div class="bss" data-k="s3s">per signed contract</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--teal)">2</div><div class="bsl" data-k="s4l">Revenue Streams</div><div class="bss" data-k="s4s">contract + care services</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--red)">2</div><div class="bsl" data-k="s5l">Headcount</div><div class="bss" data-k="s5s">admin + platform mgr</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--green)">24/7</div><div class="bsl" data-k="s6l">AI Dialing</div><div class="bss" data-k="s6s">no breaks, no limits</div></div>
+        </div>
+
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_flow">// HOW A DEAL FLOWS</div>
+        <div class="output">
+          <div class="line"><span class="key" data-k="f1k">01 · Ad Published</span><span class="val bl" data-k="f1v">Google / Facebook / Social → elderly homeowner sees ad</span></div>
+          <div class="line"><span class="key" data-k="f2k">02 · Form Fill</span><span class="val bl" data-k="f2v">Homeowner fills form → gives consent → enters our pipeline</span></div>
+          <div class="line"><span class="key" data-k="f3k">03 · AI Calls</span><span class="val gr" data-k="f3v">AI agent calls 24/7, qualifies interest, books home visit appointment</span></div>
+          <div class="line"><span class="key" data-k="f4k">04 · Home Visit</span><span class="val gr" data-k="f4v">Field partner visits home — explains contract, builds trust</span></div>
+          <div class="line"><span class="key" data-k="f5k">05 · Notary Sign</span><span class="val go" data-k="f5v">Notary signs Leibrente / Viager contract → ownership transfers to us</span></div>
+          <div class="line"><span class="key" data-k="f6k">06 · Fund Sale</span><span class="val go" data-k="f6v">We sell contract to investment fund → collect commission (3–4% of property value)</span></div>
+          <div class="line"><span class="key" data-k="f7k">07 · Care Upsell</span><span class="val te" data-k="f7v">Same visit → offer care subscription (grocery, pharmacy, cleaning) → referral commission</span></div>
+        </div>
+
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_costs">// OPERATING COSTS</div>
+        <div class="output">
+          <div class="line"><span class="key" data-k="c1">Platform / VPS</span><span class="val go">~$1,000 / year</span><span style="color:var(--dim);margin-left:10px;font-size:10px">→ fixed</span></div>
+          <div class="line"><span class="key" data-k="c2">AI Agent Credits</span><span class="val go">~$0.09 / min</span><span style="color:var(--dim);margin-left:10px;font-size:10px">→ per outbound minute</span></div>
+          <div class="line"><span class="key" data-k="c3">Ad Spend (lead gen)</span><span class="val go" data-k="c3v">€3,000–€8,000 / month</span><span style="color:var(--dim);margin-left:10px;font-size:10px">→ variable, scales with output</span></div>
+          <div class="line"><span class="key" data-k="c4">Admin (1 person)</span><span class="val go">€2,000–€3,000 / month</span></div>
+          <div class="line"><span class="key" data-k="c5">Platform Manager (1 person)</span><span class="val go">€2,000–€3,000 / month</span></div>
+          <div class="line"><span class="key" data-k="c6">Field Partner (per visit)</span><span class="val go" data-k="c6v">Commission-based — no upfront cost</span></div>
+          <div class="line"><span class="key" data-k="c7">Notary (per contract)</span><span class="val go">€500–€1,000</span><span style="color:var(--dim);margin-left:10px;font-size:10px">→ absorbed in deal margin</span></div>
+        </div>
+        <div class="prompt"><span class="cursor"></span></div>
+      </div>
+
+      <!-- ══ CAMPAIGNS ══ -->
+      <div class="panel" id="p-campaigns">
+        <div class="prompt"><span class="pu">root</span>@<span class="ph">aloalo</span>:<span class="pp">~/</span>$ <span class="pc">ps aux</span> <span class="pa">--campaigns --live</span></div>
+        <div class="sh" data-k="sh_camp">// THREE AI CAMPAIGNS — ALL RUNNING SIMULTANEOUSLY</div>
+        <div class="camp-grid">
+          <div class="ccard c1">
+            <div class="cc-n">CAMPAIGN 01</div>
+            <div class="cc-title" data-k="camp1t">Consumer Inbound</div>
+            <div class="cc-target" data-k="camp1tg">Opted-in elderly homeowners · Warm leads from ads</div>
+            <div style="margin-bottom:8px">
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c1s">Source:</span><span style="font-size:10px" data-k="c1sv">Google PPC · Facebook · Social Media</span></div>
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c1g">Goal:</span><span style="font-size:10px" data-k="c1gv">Book home visit appointment</span></div>
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c1l">Legal:</span><span style="font-size:10px;color:var(--green)" data-k="c1lv">Consent-based · GDPR clean</span></div>
+            </div>
+            <div class="cc-stat" style="color:var(--blue)" data-k="c1stat">~20–30%</div>
+            <div class="cc-stat-l" data-k="c1sl">lead-to-appointment rate</div>
+          </div>
+          <div class="ccard c2">
+            <div class="cc-n">CAMPAIGN 02</div>
+            <div class="cc-title" data-k="camp2t">Field Partner Acquisition</div>
+            <div class="cc-target" data-k="camp2tg">Care companies · Notaries · Field agents · B2B cold</div>
+            <div style="margin-bottom:8px">
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c2s">Source:</span><span style="font-size:10px" data-k="c2sv">Public directories · LinkedIn · Business registries</span></div>
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c2g">Goal:</span><span style="font-size:10px" data-k="c2gv">Sign as dual-role field partner</span></div>
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c2l">Legal:</span><span style="font-size:10px;color:var(--green)" data-k="c2lv">B2B cold call · Fully legal in DE/FR/IT</span></div>
+            </div>
+            <div class="cc-stat" style="color:var(--teal)" data-k="c2stat">Bulk</div>
+            <div class="cc-stat-l" data-k="c2sl">100% country coverage</div>
+          </div>
+          <div class="ccard c3">
+            <div class="cc-n">CAMPAIGN 03</div>
+            <div class="cc-title" data-k="camp3t">Investment Fund Outreach</div>
+            <div class="cc-target" data-k="camp3tg">Hedge funds · Real estate funds · Private equity · B2B</div>
+            <div style="margin-bottom:8px">
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c3s">Source:</span><span style="font-size:10px" data-k="c3sv">Fund databases · Decision-maker lists</span></div>
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c3g">Goal:</span><span style="font-size:10px" data-k="c3gv">Sign fund partnership agreement</span></div>
+              <div class="line" style="padding:1px 0"><span style="color:var(--dim);font-size:10px;min-width:100px" data-k="c3l">Legal:</span><span style="font-size:10px;color:var(--green)" data-k="c3lv">B2B · UWG §7 (DE) · permitted FR/IT</span></div>
+            </div>
+            <div class="cc-stat" style="color:var(--gold)" data-k="c3stat">Targeted</div>
+            <div class="cc-stat-l" data-k="c3sl">decision-maker level</div>
+          </div>
+        </div>
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_dial">// AI DIALER SCALE</div>
+        <div class="split">
+          <div>
+            <div style="font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:10px" data-k="per_ag">PER AGENT (consumer campaign)</div>
+            <div class="line"><span class="key" style="min-width:180px">concurrent_calls</span><span class="val gr">100+</span></div>
+            <div class="line"><span class="key" style="min-width:180px">contacts_per_hour</span><span class="val gr">1,200</span></div>
+            <div class="line"><span class="key" style="min-width:180px">contacts_per_day</span><span class="val gr">28,800</span></div>
+            <div class="line"><span class="key" style="min-width:180px">running_hours</span><span class="val gr">24/7</span></div>
+          </div>
+          <div class="vline"></div>
+          <div>
+            <div style="font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:10px" data-k="b2b_scale">B2B CAMPAIGNS (funds + partners)</div>
+            <div class="line"><span class="key" style="min-width:180px">de_investment_funds</span><span class="val go">~4,200 targets</span></div>
+            <div class="line"><span class="key" style="min-width:180px">fr_investment_funds</span><span class="val go">~3,100 targets</span></div>
+            <div class="line"><span class="key" style="min-width:180px">it_investment_funds</span><span class="val go">~2,400 targets</span></div>
+            <div class="line"><span class="key" style="min-width:180px">care_companies_total</span><span class="val go">~85,000 targets</span></div>
+          </div>
+        </div>
+        <div class="prompt" style="margin-top:18px"><span class="cursor"></span></div>
+      </div>
+
+      <!-- ══ PARTNERS ══ -->
+      <div class="panel" id="p-partners">
+        <div class="prompt"><span class="pu">root</span>@<span class="ph">aloalo</span>:<span class="pp">~/</span>$ <span class="pc">list</span> <span class="pa">partners --type=all</span></div>
+        <div class="sh" data-k="sh_part">// PARTNER STRUCTURE — TWO TYPES, BOTH COMMISSION-ONLY</div>
+
+        <div class="split" style="gap:16px;margin-bottom:20px">
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;border-top:2px solid var(--gold)">
+            <div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px" data-k="p1label">PARTNER 1 — INVESTMENT FUNDS</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px" data-k="p1name">Leibrente / Viager Buyers</div>
+            <div style="font-size:10px;color:var(--dim);margin-bottom:12px" data-k="p1desc">Hedge funds, real estate investment funds, private equity — they buy the contracts we originate and hold the property as an income-generating asset.</div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p1rl">Role</span><span style="font-size:11px" data-k="p1rv">Purchase signed contracts from us</span></div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p1pl">We pay them</span><span style="font-size:11px;color:var(--dim)" data-k="p1pv">Nothing</span></div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p1el">They pay us</span><span style="font-size:11px;color:var(--green);font-weight:700" data-k="p1ev">3–4% of property value per contract</span></div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p1al">AI Campaign</span><span style="font-size:11px;color:var(--gold)" data-k="p1av">Campaign 03 — targeted B2B cold outreach</span></div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;border-top:2px solid var(--teal)">
+            <div style="font-size:9px;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px" data-k="p2label">PARTNER 2 — FIELD PARTNER (DUAL ROLE)</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px" data-k="p2name">Field Agent + Care Services Provider</div>
+            <div style="font-size:10px;color:var(--dim);margin-bottom:12px" data-k="p2desc">Single partner (or two specialists) who handle the home visit — legal contract signing with notary AND optional care service subscription sign-up at the same appointment.</div>
+            <div style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:6px" data-k="p2ra">ROLE A — CONTRACT SIGNING</div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p2a1k">Duties</span><span style="font-size:11px" data-k="p2a1v">Home visit · Notary process · Contract sign · Legal transfer to us</span></div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p2a2k">We pay them</span><span style="font-size:11px;color:var(--gold);font-weight:700" data-k="p2a2v">Fixed fee per signed contract</span></div>
+            <div style="font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 6px" data-k="p2rb">ROLE B — CARE SERVICES (OPTIONAL UPSELL)</div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p2b1k">Services</span><span style="font-size:11px" data-k="p2b1v">Grocery · Pharmacy · Cleaning · Companionship</span></div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p2b2k">Model</span><span style="font-size:11px" data-k="p2b2v">Monthly subscription by elder</span></div>
+            <div class="line"><span class="key" style="min-width:160px;font-size:11px" data-k="p2b3k">We earn</span><span style="font-size:11px;color:var(--green);font-weight:700" data-k="p2b3v">20–30% referral commission / month recurring</span></div>
+          </div>
+        </div>
+
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_leg">// LEGAL FRAMEWORK</div>
+        <table class="tt">
+          <thead><tr><th data-k="th_item">ITEM</th><th data-k="th_de">GERMANY</th><th data-k="th_fr">FRANCE</th><th data-k="th_it">ITALY</th></tr></thead>
+          <tbody>
+            <tr><td data-k="leg1">Consumer AI calls</td><td><span class="tag rec" data-k="ok">Consent-based ✓</span></td><td><span class="tag rec" data-k="ok">Consent-based ✓</span></td><td><span class="tag rec" data-k="ok">Consent-based ✓</span></td></tr>
+            <tr><td data-k="leg2">B2B cold calls (funds/partners)</td><td><span class="tag rec">UWG §7 ✓</span></td><td><span class="tag rec" data-k="ok">Legal B2B ✓</span></td><td><span class="tag rec" data-k="ok">Legal B2B ✓</span></td></tr>
+            <tr><td data-k="leg3">Leibrente / Viager contract</td><td><span class="tag rec">Leibrente ✓</span></td><td><span class="tag rec">Viager ✓</span></td><td><span class="tag rec">Vendita con Riserva ✓</span></td></tr>
+            <tr><td data-k="leg4">GDPR exposure</td><td><span class="tag use" data-k="none">B2B = none</span></td><td><span class="tag use" data-k="none">B2B = none</span></td><td><span class="tag use" data-k="none">B2B = none</span></td></tr>
+          </tbody>
+        </table>
+        <div class="prompt" style="margin-top:18px"><span class="cursor"></span></div>
+      </div>
+
+      <!-- ══ REVENUE ══ -->
+      <div class="panel" id="p-revenue">
+        <div class="prompt"><span class="pu">root</span>@<span class="ph">aloalo</span>:<span class="pp">~/</span>$ <span class="pc">show</span> <span class="pa">revenue --all --margins</span></div>
+        <div class="sh" data-k="sh_rev">// REVENUE STREAMS — TWO SOURCES, BOTH COMPOUNDING</div>
+        <table class="tt">
+          <thead><tr><th>#</th><th data-k="th_stream">STREAM</th><th data-k="th_trigger">TRIGGER</th><th data-k="th_who">WHO PAYS US</th><th data-k="th_amount">AMOUNT</th><th data-k="th_type">TYPE</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="dm">01</td>
+              <td style="font-weight:700" data-k="r1n">Contract Commission</td>
+              <td class="dm" data-k="r1t">Fund buys signed contract</td>
+              <td class="ng2" data-k="r1w">Investment Fund</td>
+              <td class="ng" data-k="r1a">15–20% of contract price (origination fee)</td>
+              <td><span class="tag one" data-k="t_one">one-time</span></td>
+            </tr>
+            <tr>
+              <td class="dm">02</td>
+              <td style="font-weight:700" data-k="r2n">Care Services Referral</td>
+              <td class="dm" data-k="r2t">Elder subscribes to care services</td>
+              <td class="ng2" data-k="r2w">Care Partner</td>
+              <td class="ng" data-k="r2a">20–30% of monthly subscription</td>
+              <td><span class="tag rec" data-k="t_rec">recurring</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_deal">// CONTRACT DEAL MATH — PER SIGNED CONTRACT</div>
+        <div class="split">
+          <div>
+            <div style="font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:10px" data-k="avg_prop">AVG CONTRACT PRICE (discounted occupied value)</div>
+            <div class="line"><span class="key" style="min-width:140px">🇩🇪 Germany</span><span class="val go">~€100,000–€133,000</span></div>
+            <div class="line"><span class="key" style="min-width:140px">🇫🇷 France</span><span class="val go">~€90,000–€120,000</span></div>
+            <div class="line"><span class="key" style="min-width:140px">🇮🇹 Italy</span><span class="val go">~€64,000–€86,000</span></div>
+            <div class="line" style="margin-top:8px"><span class="key" style="min-width:140px" data-k="blended">Blended avg</span><span class="val go">~€100,000</span></div>
+          </div>
+          <div class="vline"></div>
+          <div>
+            <div style="font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:10px" data-k="per_contract">OUR ORIGINATION FEE (15–20% of contract price)</div>
+            <div class="line"><span class="key" style="min-width:140px">🇩🇪 DE @ 17.5% avg</span><span class="val gr">€17,500–€23,300</span></div>
+            <div class="line"><span class="key" style="min-width:140px">🇫🇷 FR @ 17.5% avg</span><span class="val gr">€15,750–€21,000</span></div>
+            <div class="line"><span class="key" style="min-width:140px">🇮🇹 IT @ 17.5% avg</span><span class="val gr">€11,250–€15,000</span></div>
+            <div class="line" style="margin-top:8px"><span class="key" style="min-width:140px" data-k="blended_c">Blended avg</span><span class="val gr" style="font-size:16px">~€15,000–€20,000</span></div>
+          </div>
+        </div>
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_care">// CARE SERVICES REVENUE — RECURRING</div>
+        <div class="output">
+          <div class="line"><span class="key" data-k="cs1k">Monthly subscription (elder pays)</span><span class="val te">€150–€300 / month</span></div>
+          <div class="line"><span class="key" data-k="cs2k">Our referral cut (25% avg)</span><span class="val te">€37–€75 / client / month</span></div>
+          <div class="line"><span class="key" data-k="cs3k">Adoption rate at home visit</span><span class="val te">~40%</span></div>
+          <div class="line"><span class="key" data-k="cs4k">After 100 contracts signed</span><span class="val te">~40 recurring clients = €2,200/mo</span></div>
+          <div class="line"><span class="key" data-k="cs5k">After 500 contracts signed</span><span class="val te" style="font-size:14px">~200 clients = €11,000/mo passive</span></div>
+        </div>
+        <div class="prompt" style="margin-top:18px"><span class="cursor"></span></div>
+      </div>
+
+      <!-- ══ MARKETS ══ -->
+      <div class="panel" id="p-markets">
+        <div class="prompt"><span class="pu">root</span>@<span class="ph">aloalo</span>:<span class="pp">~/</span>$ <span class="pc">query</span> <span class="pa">markets --phase=1 --elderly-homeowners</span></div>
+        <div class="sh" data-k="sh_mkt">// PHASE 1 MARKETS — GERMANY → FRANCE → ITALY</div>
+        <div class="mkt-grid">
+          <div class="mkt-card de">
+            <div class="mc-flag">🇩🇪</div>
+            <div class="mc-name" data-k="de_name">Germany · Phase 1</div>
+            <div class="mc-stat">9.2M</div>
+            <div class="mc-sl" data-k="eh_65">elderly homeowners (65+)</div>
+            <div class="mc-line" data-k="de1">Avg home value: €330,000</div>
+            <div class="mc-line" data-k="de2">Leibrente: legally established product</div>
+            <div class="mc-line" data-k="de3">AI B2B calls: legal (UWG §7)</div>
+            <div class="mc-line" data-k="de4">Language: German AI agent</div>
+            <div class="mc-line" data-k="de5">Fund targets: ~4,200 funds</div>
+          </div>
+          <div class="mkt-card fr">
+            <div class="mc-flag">🇫🇷</div>
+            <div class="mc-name" data-k="fr_name">France · Phase 2</div>
+            <div class="mc-stat">10.1M</div>
+            <div class="mc-sl" data-k="eh_65">elderly homeowners (65+)</div>
+            <div class="mc-line" data-k="fr1">Avg home value: €290,000</div>
+            <div class="mc-line" data-k="fr2">Viager: culturally accepted, growing</div>
+            <div class="mc-line" data-k="fr3">AI B2B calls: legal</div>
+            <div class="mc-line" data-k="fr4">Language: French AI agent</div>
+            <div class="mc-line" data-k="fr5">Fund targets: ~3,100 funds</div>
+          </div>
+          <div class="mkt-card it">
+            <div class="mc-flag">🇮🇹</div>
+            <div class="mc-name" data-k="it_name">Italy · Phase 3</div>
+            <div class="mc-stat">10.2M</div>
+            <div class="mc-sl" data-k="eh_65">elderly homeowners (65+)</div>
+            <div class="mc-line" data-k="it1">Avg home value: €220,000</div>
+            <div class="mc-line" data-k="it2">Vendita con Riserva: legal</div>
+            <div class="mc-line" data-k="it3">AI B2B calls: legal</div>
+            <div class="mc-line" data-k="it4">Language: Italian AI agent</div>
+            <div class="mc-line" data-k="it5">Fund targets: ~2,400 funds</div>
+          </div>
+        </div>
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_tam">// TOTAL ADDRESSABLE MARKET</div>
+        <div class="output">
+          <div class="line"><span class="key" data-k="tam1k">Total elderly homeowners (DE+FR+IT)</span><span class="val gr" style="font-size:18px">~29,500,000</span></div>
+          <div class="line" style="margin-top:6px"><span class="key" data-k="tam2k">Avg origination fee per contract</span><span class="val go" style="font-size:18px">€15,000–€20,000</span></div>
+          <div class="line" style="margin-top:6px"><span class="key" data-k="tam3k">If we close 0.01% of TAM (2,950 contracts)</span><span class="val gr" style="font-size:18px">€44M–€59M fees</span></div>
+          <div class="line" style="margin-top:6px"><span class="key" data-k="tam4k">Investment funds to cold-call (total)</span><span class="val go" style="font-size:18px">~9,700</span></div>
+          <div class="line" style="margin-top:6px"><span class="key" data-k="tam5k">Care companies to partner (total)</span><span class="val te" style="font-size:18px">~85,000</span></div>
+        </div>
+        <div class="prompt" style="margin-top:18px"><span class="cursor"></span></div>
+      </div>
+
+      <!-- ══ PROJECTIONS ══ -->
+      <div class="panel" id="p-projections">
+        <div class="prompt"><span class="pu">root</span>@<span class="ph">aloalo</span>:<span class="pp">~/</span>$ <span class="pc">forecast</span> <span class="pa">--market=DE --phase=1 --expand=FR,IT</span></div>
+        <div class="sh" data-k="sh_proj">// FINANCIAL PROJECTIONS — PHASE BY PHASE</div>
+
+        <table class="tt">
+          <thead><tr>
+            <th data-k="th_ph">PHASE</th>
+            <th data-k="th_mkt2">MARKET</th>
+            <th data-k="th_ads">AD SPEND/MO</th>
+            <th data-k="th_leads">LEADS/MO</th>
+            <th data-k="th_appts">APPTS/MO</th>
+            <th data-k="th_contr">CONTRACTS/MO</th>
+            <th data-k="th_comm">CONTRACT REV</th>
+            <th data-k="th_care">CARE REV</th>
+            <th style="color:var(--green)" data-k="th_net">NET / MONTH</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td class="ng2" data-k="ph1">Month 1–3</td>
+              <td>🇩🇪 DE</td>
+              <td class="dm">€4,000</td>
+              <td>200</td>
+              <td>50</td>
+              <td>8–12</td>
+              <td class="ng2">€120–240K</td>
+              <td class="dm">€400</td>
+              <td class="ng" style="font-size:13px">~€110–225K</td>
+            </tr>
+            <tr>
+              <td class="ng2" data-k="ph2">Month 4–6</td>
+              <td>🇩🇪 DE optimised</td>
+              <td class="dm">€7,000</td>
+              <td>400</td>
+              <td>100</td>
+              <td>18–25</td>
+              <td class="ng2">€270–500K</td>
+              <td class="dm">€1,200</td>
+              <td class="ng" style="font-size:13px">~€255–485K</td>
+            </tr>
+            <tr>
+              <td class="ng2" data-k="ph3">Month 7–9</td>
+              <td>🇩🇪 + 🇫🇷 FR</td>
+              <td class="dm">€14,000</td>
+              <td>700</td>
+              <td>175</td>
+              <td>35–50</td>
+              <td class="ng2">€525K–1M</td>
+              <td class="dm">€3,500</td>
+              <td class="ng" style="font-size:13px">~€500K–980K</td>
+            </tr>
+            <tr class="hl">
+              <td style="color:var(--green);font-weight:700" data-k="ph4">Month 10–12</td>
+              <td>🇩🇪 + 🇫🇷 + 🇮🇹</td>
+              <td class="dm">€22,000</td>
+              <td>1,100</td>
+              <td>275</td>
+              <td class="ng" style="font-size:13px;font-weight:700">60–85</td>
+              <td class="ng" style="font-size:13px;font-weight:700">€900K–1.7M</td>
+              <td style="color:var(--teal);">€8,000</td>
+              <td class="ng" style="font-size:15px;font-weight:700">~€865K–1.65M</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_ann">// ANNUAL SUMMARY — YEAR 1</div>
+        <div class="stats-row">
+          <div class="bstat"><div class="bsv" style="color:var(--green)">200–300</div><div class="bsl" data-k="yr_c">Contracts Yr 1</div><div class="bss" data-k="yr_cs">signed &amp; sold to funds</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--gold)">€3M–5M</div><div class="bsl" data-k="yr_r">Origination Fees</div><div class="bss" data-k="yr_rs">from fund deals (15–20%)</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--teal)">€80–120K</div><div class="bsl" data-k="yr_ca">Care ARR</div><div class="bss" data-k="yr_cas">passive recurring by Yr end</div></div>
+          <div class="bstat"><div class="bsv" style="color:var(--green)">€2.8M–4.8M</div><div class="bsl" data-k="yr_n">Net Yr 1</div><div class="bss" data-k="yr_ns">after all operating costs</div></div>
+        </div>
+        <div style="font-size:9px;color:var(--dim)" data-k="note_proj">// Based on: €10K avg commission · 25% lead→appointment · 35% appointment→contract · 40% care adoption. Costs deducted.</div>
+        <div class="prompt" style="margin-top:18px"><span class="cursor"></span></div>
+      </div>
+
+      <!-- ══ TBA PITCH ══ -->
+      <div class="panel" id="p-tba">
+        <div class="prompt"><span class="pu">root</span>@<span class="ph">aloalo</span>:<span class="pp">~/</span>$ <span class="pc">show</span> <span class="pa">investor-pitch --type=TBA --retain=20pct</span></div>
+        <div class="sh" data-k="sh_tba">// TURNKEY BUSINESS ACQUISITION — THREE PRICE TIERS</div>
+
+        <div class="callout">
+          <div class="co-label" data-k="tba_what">WHAT WE'RE SELLING</div>
+          <span data-k="tba_body">A fully operational, ready-to-run elderly homeowner contract brokerage — complete with AI platform, lead pipeline, partner lists, fund contacts, and business blueprint. We retain 20% net and handle all technical + commercial operations. Investor takes 80% and handles field operations.</span>
+        </div>
+
+        <div class="tier-grid">
+          <!-- TIER 1 -->
+          <div class="tier t1">
+            <div class="tier-label" data-k="t1l">Tier 1 — Blueprint Only</div>
+            <div class="tier-val" data-k="t1v">$15K–$30K</div>
+            <div class="tier-desc" data-k="t1d">Documentation + contacts. No platform. No pipeline. Investor builds everything themselves from our blueprint.</div>
+            <div class="tier-includes">
+              <div class="ti"><span class="chk">✓</span><span data-k="t1i1">Full business model documentation</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t1i2">B2B contact lists (funds + care companies)</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t1i3">SOP + workflow documentation</span></div>
+              <div class="ti" style="color:var(--dim)"><span>✗</span><span data-k="t1x1">AI platform not included</span></div>
+              <div class="ti" style="color:var(--dim)"><span>✗</span><span data-k="t1x2">Lead pipeline not included</span></div>
+              <div class="ti" style="color:var(--dim)"><span>✗</span><span data-k="t1x3">No technical support</span></div>
+            </div>
+          </div>
+
+          <!-- TIER 2 — HIGHLIGHTED -->
+          <div class="tier t2">
+            <div class="tier-badge" data-k="t2badge">WHERE WE ARE</div>
+            <div class="tier-label" data-k="t2l">Tier 2 — Platform + Lists + Blueprint</div>
+            <div class="tier-val" data-k="t2v">$80K–$150K</div>
+            <div class="tier-desc" data-k="t2d">Complete turnkey package. Platform built, tested and ready to plug VoIP and run. All lists. Full documentation. We stay on as 20% technical + commercial partner.</div>
+            <div class="tier-includes">
+              <div class="ti"><span class="chk">✓</span><span data-k="t2i1">Full business model + SOP documentation</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t2i2">B2B lists: ~9,700 funds + ~85K care companies</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t2i3">AI platform built &amp; tested — plug and run</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t2i4">3 AI campaign scripts (DE/FR/IT)</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t2i5">CRM + lead pipeline configured</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t2i6">We retain 20% — handle tech + commercial ops</span></div>
+            </div>
+          </div>
+
+          <!-- TIER 3 -->
+          <div class="tier t3">
+            <div class="tier-label" data-k="t3l">Tier 3 — Proven Revenue</div>
+            <div class="tier-val" data-k="t3v">$300K–$500K+</div>
+            <div class="tier-desc" data-k="t3d">Everything in Tier 2 + proven contracts already closed and sold to funds. Revenue demonstrated. Risk de-risked.</div>
+            <div class="tier-includes">
+              <div class="ti"><span class="chk">✓</span><span data-k="t3i1">Everything in Tier 2</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t3i2">5–10 contracts already closed</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t3i3">Proven fund payment track record</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t3i4">Active care services pipeline</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t3i5">Demonstrated AI campaign performance</span></div>
+              <div class="ti"><span class="chk">✓</span><span data-k="t3i6">We retain 20% — cashflowing from day 1</span></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="dv"/>
+        <div class="sh" data-k="sh_split">// RESPONSIBILITY SPLIT — WHAT EACH PARTY HANDLES</div>
+        <div class="split">
+          <div>
+            <div style="font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:10px" data-k="we_side">WE HANDLE (20% NET)</div>
+            <div class="line"><span style="color:var(--green);margin-right:6px">→</span><span data-k="we1">Platform uptime + AI agent management</span></div>
+            <div class="line"><span style="color:var(--green);margin-right:6px">→</span><span data-k="we2">AI campaign management (all 3)</span></div>
+            <div class="line"><span style="color:var(--green);margin-right:6px">→</span><span data-k="we3">Lead pipeline + CRM operations</span></div>
+            <div class="line"><span style="color:var(--green);margin-right:6px">→</span><span data-k="we4">Technical support + updates</span></div>
+            <div class="line"><span style="color:var(--green);margin-right:6px">→</span><span data-k="we5">Commercial relationship with funds</span></div>
+          </div>
+          <div class="vline"></div>
+          <div>
+            <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px" data-k="inv_side">INVESTOR HANDLES (80%)</div>
+            <div class="line"><span style="color:var(--gold);margin-right:6px">→</span><span data-k="inv1">Field partner management</span></div>
+            <div class="line"><span style="color:var(--gold);margin-right:6px">→</span><span data-k="inv2">Notary + legal operations</span></div>
+            <div class="line"><span style="color:var(--gold);margin-right:6px">→</span><span data-k="inv3">Ad budget deployment</span></div>
+            <div class="line"><span style="color:var(--gold);margin-right:6px">→</span><span data-k="inv4">Administrative staff (2 people)</span></div>
+            <div class="line"><span style="color:var(--gold);margin-right:6px">→</span><span data-k="inv5">All non-technical operations</span></div>
+          </div>
+        </div>
+        <div class="prompt" style="margin-top:18px"><span class="cursor"></span></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /body -->
+
+  <div class="statusbar">
+    <span>⬡ ALOALO</span>
+    <span style="font-weight:400;font-size:10px" data-k="sb_pow">Powered by Motely Peers FZCO · Dubai, UAE</span>
+    <span id="sb-panel">OVERVIEW</span>
+    <div class="sb-r">
+      <span data-k="sb_market">DE → FR → IT</span>
+      <span data-k="sb_model">LEIBRENTE · VIAGER</span>
+      <span data-k="sb_retain">WE RETAIN: 20% NET</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const T = {
+en:{
+  nav_sys:"system",nav_ov:"overview",nav_camp:"campaigns",nav_part:"partners",
+  nav_fin:"financials",nav_rev:"revenue",nav_mkt:"markets",nav_proj:"projections",
+  nav_inv:"investor",nav_tba:"TBA pitch",
+  sh_ov:"// ALOALO — SYSTEM OVERVIEW",
+  co_what:"WHAT WE DO",
+  co_body:"We generate opted-in elderly homeowner leads via ads, qualify them with AI, send field partners to their home to sign Leibrente / Viager contracts, then sell those contracts to investment funds for commission — while upselling care services at the same visit.",
+  s1l:"Elderly Homeowners",s1s:"DE + FR + IT combined",s2l:"AI Campaigns",s2s:"consumer · partners · funds",
+  s3l:"Avg Commission",s3s:"per signed contract",s4l:"Revenue Streams",s4s:"contract + care services",
+  s5l:"Headcount",s5s:"admin + platform mgr",s6l:"AI Dialing",s6s:"no breaks, no limits",
+  sh_flow:"// HOW A DEAL FLOWS",
+  f1k:"01 · Ad Published",f1v:"Google / Facebook / Social → elderly homeowner sees ad",
+  f2k:"02 · Form Fill",f2v:"Homeowner fills form → gives consent → enters our pipeline",
+  f3k:"03 · AI Calls",f3v:"AI agent calls 24/7, qualifies interest, books home visit appointment",
+  f4k:"04 · Home Visit",f4v:"Field partner visits home — explains contract, builds trust",
+  f5k:"05 · Notary Sign",f5v:"Notary signs Leibrente / Viager contract → ownership transfers to us",
+  f6k:"06 · Fund Sale",f6v:"We sell contract to investment fund → collect commission (3–4% of property value)",
+  f7k:"07 · Care Upsell",f7v:"Same visit → offer care subscription (grocery, pharmacy, cleaning) → referral commission",
+  sh_costs:"// OPERATING COSTS",
+  c1:"Platform / VPS",c2:"AI Agent Credits",c3:"Ad Spend (lead gen)",c3v:"€3,000–€8,000 / month",
+  c4:"Admin (1 person)",c5:"Platform Manager (1 person)",c6:"Field Partner (per visit)",
+  c6v:"Commission-based — no upfront cost",c7:"Notary (per contract)",
+  sh_camp:"// THREE AI CAMPAIGNS — ALL RUNNING SIMULTANEOUSLY",
+  camp1t:"Consumer Inbound",camp1tg:"Opted-in elderly homeowners · Warm leads from ads",
+  c1s:"Source:",c1sv:"Google PPC · Facebook · Social Media",c1g:"Goal:",c1gv:"Book home visit appointment",
+  c1l:"Legal:",c1lv:"Consent-based · GDPR clean",c1stat:"~20–30%",c1sl:"lead-to-appointment rate",
+  camp2t:"Field Partner Acquisition",camp2tg:"Care companies · Notaries · Field agents · B2B cold",
+  c2s:"Source:",c2sv:"Public directories · LinkedIn · Business registries",c2g:"Goal:",c2gv:"Sign as dual-role field partner",
+  c2l:"Legal:",c2lv:"B2B cold call · Fully legal in DE/FR/IT",c2stat:"Bulk",c2sl:"100% country coverage",
+  camp3t:"Investment Fund Outreach",camp3tg:"Hedge funds · Real estate funds · Private equity · B2B",
+  c3s:"Source:",c3sv:"Fund databases · Decision-maker lists",c3g:"Goal:",c3gv:"Sign fund partnership agreement",
+  c3l:"Legal:",c3lv:"B2B · UWG §7 (DE) · permitted FR/IT",c3stat:"Targeted",c3sl:"decision-maker level",
+  sh_dial:"// AI DIALER SCALE",
+  per_ag:"PER AGENT (consumer campaign)",b2b_scale:"B2B CAMPAIGNS (funds + partners)",
+  sh_part:"// PARTNER STRUCTURE — TWO TYPES, BOTH COMMISSION-ONLY",
+  p1label:"PARTNER 1 — INVESTMENT FUNDS",p1name:"Leibrente / Viager Buyers",
+  p1desc:"Hedge funds, real estate investment funds, private equity — they buy the contracts we originate and hold the property as an income-generating asset.",
+  p1rl:"Role",p1rv:"Purchase signed contracts from us",p1pl:"We pay them",p1pv:"Nothing",
+  p1el:"They pay us",p1ev:"15–20% of contract price — negotiated origination fee",p1al:"AI Campaign",p1av:"Campaign 03 — targeted B2B cold outreach",
+  p2label:"PARTNER 2 — FIELD PARTNER (DUAL ROLE)",p2name:"Field Agent + Care Services Provider",
+  p2desc:"Single partner (or two specialists) who handle the home visit — legal contract signing with notary AND optional care service subscription sign-up at the same appointment.",
+  p2ra:"ROLE A — CONTRACT SIGNING",p2a1k:"Duties",p2a1v:"Home visit · Notary process · Contract sign · Legal transfer to us",
+  p2a2k:"We pay them",p2a2v:"Fixed fee per signed contract",
+  p2rb:"ROLE B — CARE SERVICES (OPTIONAL UPSELL)",p2b1k:"Services",p2b1v:"Grocery · Pharmacy · Cleaning · Companionship",
+  p2b2k:"Model",p2b2v:"Monthly subscription by elder",p2b3k:"We earn",p2b3v:"20–30% referral commission / month recurring",
+  sh_leg:"// LEGAL FRAMEWORK",th_item:"ITEM",th_de:"GERMANY",th_fr:"FRANCE",th_it:"ITALY",
+  leg1:"Consumer AI calls",leg2:"B2B cold calls (funds/partners)",leg3:"Leibrente / Viager contract",leg4:"GDPR exposure",
+  ok:"Legal ✓",none:"B2B = none",
+  sh_rev:"// REVENUE STREAMS — TWO SOURCES, BOTH COMPOUNDING",
+  th_stream:"STREAM",th_trigger:"TRIGGER",th_who:"WHO PAYS US",th_amount:"AMOUNT",th_type:"TYPE",
+  r1n:"Contract Commission",r1t:"Fund buys signed contract",r1w:"Investment Fund",r1a:"15–20% of contract price (origination fee)",
+  r2n:"Care Services Referral",r2t:"Elder subscribes to care services",r2w:"Care Partner",r2a:"20–30% of monthly subscription",
+  t_one:"one-time",t_rec:"recurring",
+  sh_deal:"// CONTRACT DEAL MATH — PER SIGNED CONTRACT",
+  avg_prop:"AVG PROPERTY VALUES",per_contract:"OUR COMMISSION PER CONTRACT",blended:"Blended avg",blended_c:"Blended avg",
+  sh_care:"// CARE SERVICES REVENUE — RECURRING",
+  cs1k:"Monthly subscription (elder pays)",cs2k:"Our referral cut (25% avg)",cs3k:"Adoption rate at home visit",
+  cs4k:"After 100 contracts signed",cs5k:"After 500 contracts signed",
+  sh_mkt:"// PHASE 1 MARKETS — GERMANY → FRANCE → ITALY",
+  eh_65:"elderly homeowners (65+)",
+  de_name:"Germany · Phase 1",de1:"Avg home value: €330,000",de2:"Leibrente: legally established product",
+  de3:"AI B2B calls: legal (UWG §7)",de4:"Language: German AI agent",de5:"Fund targets: ~4,200 funds",
+  fr_name:"France · Phase 2",fr1:"Avg home value: €290,000",fr2:"Viager: culturally accepted, growing",
+  fr3:"AI B2B calls: legal",fr4:"Language: French AI agent",fr5:"Fund targets: ~3,100 funds",
+  it_name:"Italy · Phase 3",it1:"Avg home value: €220,000",it2:"Vendita con Riserva: legal",
+  it3:"AI B2B calls: legal",it4:"Language: Italian AI agent",it5:"Fund targets: ~2,400 funds",
+  sh_tam:"// TOTAL ADDRESSABLE MARKET",
+  tam1k:"Total elderly homeowners (DE+FR+IT)",tam2k:"Avg contract value (to fund)",
+  tam3k:"If we close 0.01% of TAM (2,950 contracts)",tam4k:"Investment funds to cold-call (total)",tam5k:"Care companies to partner (total)",
+  sh_proj:"// FINANCIAL PROJECTIONS — PHASE BY PHASE",
+  th_ph:"PHASE",th_mkt2:"MARKET",th_ads:"AD SPEND/MO",th_leads:"LEADS/MO",th_appts:"APPTS/MO",
+  th_contr:"CONTRACTS/MO",th_comm:"CONTRACT REV",th_care:"CARE REV",th_net:"NET / MONTH",
+  ph1:"Month 1–3",ph2:"Month 4–6",ph3:"Month 7–9",ph4:"Month 10–12",
+  sh_ann:"// ANNUAL SUMMARY — YEAR 1",
+  yr_c:"Contracts Yr 1",yr_cs:"signed & sold to funds",yr_r:"Contract Revenue",yr_rs:"from fund commissions",
+  yr_ca:"Care ARR",yr_cas:"passive recurring by Yr end",yr_n:"Net Yr 1",yr_ns:"after all operating costs",
+  note_proj:"// Based on: €10K avg commission · 25% lead→appt · 35% appt→contract · 40% care adoption. Costs deducted.",
+  sh_tba:"// TURNKEY BUSINESS ACQUISITION — THREE PRICE TIERS",
+  tba_what:"WHAT WE'RE SELLING",
+  tba_body:"A fully operational, ready-to-run elderly homeowner contract brokerage — complete with AI platform, lead pipeline, partner lists, fund contacts, and business blueprint. We retain 20% net and handle all technical + commercial operations. Investor takes 80% and handles field operations.",
+  t1l:"Tier 1 — Blueprint Only",t1v:"$15K–$30K",
+  t1d:"Documentation + contacts. No platform. No pipeline. Investor builds everything themselves from our blueprint.",
+  t1i1:"Full business model documentation",t1i2:"B2B contact lists (funds + care companies)",t1i3:"SOP + workflow documentation",
+  t1x1:"AI platform not included",t1x2:"Lead pipeline not included",t1x3:"No technical support",
+  t2l:"Tier 2 — Platform + Lists + Blueprint",t2v:"$80K–$150K",t2badge:"WHERE WE ARE",
+  t2d:"Complete turnkey package. Platform built, tested and ready to plug VoIP and run. All lists. Full documentation. We stay on as 20% technical + commercial partner.",
+  t2i1:"Full business model + SOP documentation",t2i2:"B2B lists: ~9,700 funds + ~85K care companies",
+  t2i3:"AI platform built & tested — plug and run",t2i4:"3 AI campaign scripts (DE/FR/IT)",
+  t2i5:"CRM + lead pipeline configured",t2i6:"We retain 20% — handle tech + commercial ops",
+  t3l:"Tier 3 — Proven Revenue",t3v:"$300K–$500K+",
+  t3d:"Everything in Tier 2 + proven contracts already closed and sold to funds. Revenue demonstrated. Risk de-risked.",
+  t3i1:"Everything in Tier 2",t3i2:"5–10 contracts already closed",t3i3:"Proven fund payment track record",
+  t3i4:"Active care services pipeline",t3i5:"Demonstrated AI campaign performance",t3i6:"We retain 20% — cashflowing from day 1",
+  sh_split:"// RESPONSIBILITY SPLIT — WHAT EACH PARTY HANDLES",
+  we_side:"WE HANDLE (20% NET)",
+  we1:"Platform uptime + AI agent management",we2:"AI campaign management (all 3)",
+  we3:"Lead pipeline + CRM operations",we4:"Technical support + updates",we5:"Commercial relationship with funds",
+  inv_side:"INVESTOR HANDLES (80%)",
+  inv1:"Field partner management",inv2:"Notary + legal operations",
+  inv3:"Ad budget deployment",inv4:"Administrative staff (2 people)",inv5:"All non-technical operations",
+  sb_pow:"Powered by Motely Peers FZCO · Dubai, UAE",sb_market:"DE → FR → IT",sb_model:"LEIBRENTE · VIAGER",sb_retain:"WE RETAIN: 20% NET",
+},
+fr:{
+  nav_sys:"système",nav_ov:"aperçu",nav_camp:"campagnes",nav_part:"partenaires",
+  nav_fin:"finances",nav_rev:"revenus",nav_mkt:"marchés",nav_proj:"projections",
+  nav_inv:"investisseur",nav_tba:"pitch TBA",
+  sh_ov:"// ALOALO — VUE D'ENSEMBLE DU SYSTÈME",
+  co_what:"CE QUE NOUS FAISONS",
+  co_body:"Nous générons des leads consentis de propriétaires âgés via la publicité, les qualifions par IA, envoyons des partenaires terrain chez eux pour signer des contrats Viager, puis vendons ces contrats à des fonds d'investissement contre commission — tout en proposant des services d'aide à domicile lors du même rendez-vous.",
+  s1l:"Propriétaires Âgés",s1s:"DE + FR + IT combinés",s2l:"Campagnes IA",s2s:"consommateur · partenaires · fonds",
+  s3l:"Commission Moyenne",s3s:"par contrat signé",s4l:"Sources de Revenus",s4s:"contrat + services de soins",
+  s5l:"Effectif",s5s:"admin + responsable plateforme",s6l:"Appels IA",s6s:"sans interruption",
+  sh_flow:"// COMMENT UN DEAL SE DÉROULE",
+  f1k:"01 · Publicité",f1v:"Google / Facebook / Social → le propriétaire âgé voit l'annonce",
+  f2k:"02 · Formulaire",f2v:"Le propriétaire remplit le formulaire → consent → entre dans notre pipeline",
+  f3k:"03 · Appel IA",f3v:"L'agent IA appelle 24h/7j, qualifie l'intérêt, réserve un rendez-vous à domicile",
+  f4k:"04 · Visite à Domicile",f4v:"Le partenaire terrain visite le domicile — explique le contrat, établit la confiance",
+  f5k:"05 · Signature Notaire",f5v:"Le notaire signe le contrat Viager → la propriété nous est transférée",
+  f6k:"06 · Vente au Fonds",f6v:"Nous vendons le contrat au fonds → collectons la commission (3–4% de la valeur du bien)",
+  f7k:"07 · Upsell Soins",f7v:"Même visite → proposition d'abonnement soins (courses, pharmacie, ménage) → commission",
+  sh_costs:"// COÛTS OPÉRATIONNELS",
+  c1:"Plateforme / VPS",c2:"Crédits Agent IA",c3:"Dépenses Pub (génération leads)",c3v:"€3 000–€8 000 / mois",
+  c4:"Admin (1 personne)",c5:"Responsable Plateforme (1 personne)",c6:"Partenaire Terrain (par visite)",
+  c6v:"Commission uniquement — aucun coût initial",c7:"Notaire (par contrat)",
+  sh_camp:"// TROIS CAMPAGNES IA — TOUTES EN SIMULTANÉ",
+  camp1t:"Entrant Consommateur",camp1tg:"Propriétaires âgés consentants · Leads chauds via publicité",
+  c1s:"Source :",c1sv:"Google PPC · Facebook · Réseaux sociaux",c1g:"Objectif :",c1gv:"Réserver un rendez-vous à domicile",
+  c1l:"Légal :",c1lv:"Basé sur le consentement · Conforme RGPD",c1stat:"~20–30%",c1sl:"taux lead → rendez-vous",
+  camp2t:"Acquisition Partenaire Terrain",camp2tg:"Sociétés de soins · Notaires · Agents terrain · B2B froid",
+  c2s:"Source :",c2sv:"Annuaires publics · LinkedIn · Registres commerciaux",c2g:"Objectif :",c2gv:"Signer comme partenaire terrain double rôle",
+  c2l:"Légal :",c2lv:"Appel B2B froid · Totalement légal en DE/FR/IT",c2stat:"En masse",c2sl:"couverture 100% du pays",
+  camp3t:"Prospection Fonds d'Investissement",camp3tg:"Hedge funds · Fonds immobiliers · Capital-investissement · B2B",
+  c3s:"Source :",c3sv:"Bases de données de fonds · Listes de décideurs",c3g:"Objectif :",c3gv:"Signer un accord de partenariat avec le fonds",
+  c3l:"Légal :",c3lv:"B2B · autorisé FR/DE/IT",c3stat:"Ciblé",c3sl:"niveau décideur",
+  sh_dial:"// ÉCHELLE DU COMPOSEUR IA",
+  per_ag:"PAR AGENT (campagne consommateur)",b2b_scale:"CAMPAGNES B2B (fonds + partenaires)",
+  sh_part:"// STRUCTURE PARTENAIRES — DEUX TYPES, TOUS À LA COMMISSION",
+  p1label:"PARTENAIRE 1 — FONDS D'INVESTISSEMENT",p1name:"Acheteurs Viager / Leibrente",
+  p1desc:"Hedge funds, fonds d'investissement immobilier, capital-investissement — ils achètent les contrats que nous originons et détiennent le bien comme actif générateur de revenus.",
+  p1rl:"Rôle",p1rv:"Acheter les contrats signés auprès de nous",p1pl:"Nous leur payons",p1pv:"Rien",
+  p1el:"Ils nous paient",p1ev:"3–4% de la valeur du bien par contrat",p1al:"Campagne IA",p1av:"Campagne 03 — prospection B2B froide ciblée",
+  p2label:"PARTENAIRE 2 — PARTENAIRE TERRAIN (DOUBLE RÔLE)",p2name:"Agent Terrain + Prestataire de Soins",
+  p2desc:"Un seul partenaire (ou deux spécialistes) qui gèrent la visite à domicile — signature légale du contrat chez le notaire ET inscription optionnelle aux services de soins lors du même rendez-vous.",
+  p2ra:"RÔLE A — SIGNATURE DU CONTRAT",p2a1k:"Missions",p2a1v:"Visite · Notaire · Signature · Transfert légal",
+  p2a2k:"Nous leur payons",p2a2v:"Honoraire fixe par contrat signé",
+  p2rb:"RÔLE B — SERVICES DE SOINS (UPSELL OPTIONNEL)",p2b1k:"Services",p2b1v:"Courses · Pharmacie · Ménage · Compagnie",
+  p2b2k:"Modèle",p2b2v:"Abonnement mensuel par le senior",p2b3k:"Nous gagnons",p2b3v:"20–30% de commission de parrainage / mois récurrent",
+  sh_leg:"// CADRE LÉGAL",th_item:"ÉLÉMENT",th_de:"ALLEMAGNE",th_fr:"FRANCE",th_it:"ITALIE",
+  leg1:"Appels IA consommateurs",leg2:"Appels B2B froids (fonds/partenaires)",leg3:"Contrat Viager / Leibrente",leg4:"Exposition RGPD",
+  ok:"Légal ✓",none:"B2B = aucun",
+  sh_rev:"// SOURCES DE REVENUS — DEUX SOURCES, TOUTES EN CROISSANCE",
+  th_stream:"SOURCE",th_trigger:"DÉCLENCHEUR",th_who:"QUI NOUS PAIE",th_amount:"MONTANT",th_type:"TYPE",
+  r1n:"Commission Contrat",r1t:"Le fonds achète le contrat signé",r1w:"Fonds d'Investissement",r1a:"3–4% de la valeur du bien",
+  r2n:"Parrainage Services de Soins",r2t:"Le senior souscrit aux services de soins",r2w:"Partenaire Soins",r2a:"20–30% de l'abonnement mensuel",
+  t_one:"unique",t_rec:"récurrent",
+  sh_deal:"// CALCUL PAR CONTRAT SIGNÉ",avg_prop:"VALEURS IMMOBILIÈRES MOYENNES",per_contract:"NOTRE COMMISSION PAR CONTRAT",blended:"Moyenne pondérée",blended_c:"Moyenne pondérée",
+  sh_care:"// REVENUS SERVICES DE SOINS — RÉCURRENT",
+  cs1k:"Abonnement mensuel (payé par le senior)",cs2k:"Notre part (25% moy.)",cs3k:"Taux d'adoption lors de la visite",
+  cs4k:"Après 100 contrats signés",cs5k:"Après 500 contrats signés",
+  sh_mkt:"// MARCHÉS PHASE 1 — ALLEMAGNE → FRANCE → ITALIE",eh_65:"propriétaires âgés (65+)",
+  de_name:"Allemagne · Phase 1",de1:"Valeur moy. du bien : €330 000",de2:"Leibrente : produit légalement établi",de3:"Appels B2B IA : légal (UWG §7)",de4:"Langue : agent IA allemand",de5:"Cibles fonds : ~4 200 fonds",
+  fr_name:"France · Phase 2",fr1:"Valeur moy. du bien : €290 000",fr2:"Viager : culturellement accepté, en croissance",fr3:"Appels B2B IA : légal",fr4:"Langue : agent IA français",fr5:"Cibles fonds : ~3 100 fonds",
+  it_name:"Italie · Phase 3",it1:"Valeur moy. du bien : €220 000",it2:"Vendita con Riserva : légal",it3:"Appels B2B IA : légal",it4:"Langue : agent IA italien",it5:"Cibles fonds : ~2 400 fonds",
+  sh_tam:"// MARCHÉ ADRESSABLE TOTAL",
+  tam1k:"Total propriétaires âgés (DE+FR+IT)",tam2k:"Valeur moy. du contrat (pour le fonds)",
+  tam3k:"Si nous signons 0,01% du TAM (2 950 contrats)",tam4k:"Fonds à démarcher (total)",tam5k:"Sociétés de soins à contacter (total)",
+  sh_proj:"// PROJECTIONS FINANCIÈRES — PHASE PAR PHASE",
+  th_ph:"PHASE",th_mkt2:"MARCHÉ",th_ads:"PUB/MOIS",th_leads:"LEADS/MOIS",th_appts:"RDV/MOIS",
+  th_contr:"CONTRATS/MOIS",th_comm:"REV. CONTRATS",th_care:"REV. SOINS",th_net:"NET / MOIS",
+  ph1:"Mois 1–3",ph2:"Mois 4–6",ph3:"Mois 7–9",ph4:"Mois 10–12",
+  sh_ann:"// BILAN ANNUEL — AN 1",
+  yr_c:"Contrats An 1",yr_cs:"signés & vendus aux fonds",yr_r:"Revenus Contrats",yr_rs:"commissions des fonds",
+  yr_ca:"ARR Soins",yr_cas:"récurrent passif en fin d'an",yr_n:"Net An 1",yr_ns:"après tous les coûts opérationnels",
+  note_proj:"// Basé sur : €10K comm. moy. · 25% lead→RDV · 35% RDV→contrat · 40% adoption soins.",
+  sh_tba:"// ACQUISITION TURNKEY — TROIS NIVEAUX DE PRIX",
+  tba_what:"CE QUE NOUS VENDONS",
+  tba_body:"Un système de courtage de contrats immobiliers seniors entièrement opérationnel, prêt à fonctionner — avec plateforme IA, pipeline de leads, listes partenaires, contacts fonds et blueprint. Nous conservons 20% net et gérons toutes les opérations techniques + commerciales.",
+  t1l:"Niveau 1 — Blueprint Seul",t1v:"15 000–30 000 $",
+  t1d:"Documentation + contacts. Sans plateforme. Sans pipeline. L'investisseur construit tout lui-même.",
+  t1i1:"Documentation complète du modèle",t1i2:"Listes B2B (fonds + soins)",t1i3:"SOP + documentation workflow",
+  t1x1:"Plateforme IA non incluse",t1x2:"Pipeline non inclus",t1x3:"Pas de support technique",
+  t2l:"Niveau 2 — Plateforme + Listes + Blueprint",t2v:"80 000–150 000 $",t2badge:"OÙ NOUS EN SOMMES",
+  t2d:"Package clé en main complet. Plateforme construite, testée, prête à brancher le VoIP. Toutes les listes. Documentation complète. Nous restons partenaires à 20%.",
+  t2i1:"Documentation complète + SOP",t2i2:"Listes B2B : ~9 700 fonds + ~85 000 sociétés de soins",
+  t2i3:"Plateforme IA construite & testée",t2i4:"3 scripts campagne IA (DE/FR/IT)",
+  t2i5:"CRM + pipeline configurés",t2i6:"Nous conservons 20% — tech + commercial",
+  t3l:"Niveau 3 — Revenus Prouvés",t3v:"300 000–500 000 $+",
+  t3d:"Tout le Niveau 2 + des contrats déjà signés et vendus aux fonds. Revenus démontrés. Risque minimisé.",
+  t3i1:"Tout du Niveau 2",t3i2:"5–10 contrats déjà signés",t3i3:"Historique de paiement fonds prouvé",
+  t3i4:"Pipeline actif de services de soins",t3i5:"Performance campagne IA démontrée",t3i6:"Nous conservons 20% — cashflow dès le jour 1",
+  sh_split:"// RÉPARTITION DES RESPONSABILITÉS",
+  we_side:"NOUS GÉRONS (20% NET)",
+  we1:"Uptime plateforme + gestion agents IA",we2:"Gestion des 3 campagnes IA",
+  we3:"Pipeline leads + opérations CRM",we4:"Support technique + mises à jour",we5:"Relation commerciale avec les fonds",
+  inv_side:"L'INVESTISSEUR GÈRE (80%)",
+  inv1:"Gestion des partenaires terrain",inv2:"Opérations notariales + légales",
+  inv3:"Déploiement du budget publicitaire",inv4:"Personnel administratif (2 personnes)",inv5:"Toutes les opérations non-techniques",
+  sb_pow:"Propulsé par Motely Peers FZCO · Dubaï, EAU",sb_market:"DE → FR → IT",sb_model:"LEIBRENTE · VIAGER",sb_retain:"NOUS CONSERVONS : 20% NET",
+},
+de:{
+  nav_sys:"system",nav_ov:"überblick",nav_camp:"kampagnen",nav_part:"partner",
+  nav_fin:"finanzen",nav_rev:"einnahmen",nav_mkt:"märkte",nav_proj:"prognosen",
+  nav_inv:"investor",nav_tba:"TBA pitch",
+  sh_ov:"// ALOALO — SYSTEMÜBERBLICK",
+  co_what:"WAS WIR TUN",
+  co_body:"Wir generieren einwilligende ältere Hauseigentümer-Leads über Anzeigen, qualifizieren sie per KI, schicken Feldpartner für die Unterzeichnung von Leibrenten-Verträgen zu ihnen nach Hause und verkaufen diese Verträge dann gegen Provision an Investmentfonds — mit einem Pflege-Upsell beim selben Termin.",
+  s1l:"Ältere Hauseigentümer",s1s:"DE + FR + IT kombiniert",s2l:"KI-Kampagnen",s2s:"Verbraucher · Partner · Fonds",
+  s3l:"Durchschn. Provision",s3s:"pro unterzeichnetem Vertrag",s4l:"Einnahmequellen",s4s:"Vertrag + Pflegedienste",
+  s5l:"Mitarbeiterzahl",s5s:"Admin + Plattformmanager",s6l:"KI-Anrufe",s6s:"rund um die Uhr",
+  sh_flow:"// WIE EIN DEAL ABLÄUFT",
+  f1k:"01 · Anzeige",f1v:"Google / Facebook / Social → älterer Hauseigentümer sieht Anzeige",
+  f2k:"02 · Formular",f2v:"Eigentümer füllt Formular aus → gibt Einwilligung → tritt in unsere Pipeline ein",
+  f3k:"03 · KI-Anruf",f3v:"KI-Agent ruft 24/7 an, qualifiziert Interesse, bucht Hausbesuchstermin",
+  f4k:"04 · Hausbesuch",f4v:"Feldpartner besucht das Haus — erklärt Vertrag, baut Vertrauen auf",
+  f5k:"05 · Notarielle Unterzeichnung",f5v:"Notar unterzeichnet Leibrenten-Vertrag → Eigentum wird auf uns übertragen",
+  f6k:"06 · Fondsverkauf",f6v:"Wir verkaufen Vertrag an Fonds → kassieren Provision (3–4% des Immobilienwerts)",
+  f7k:"07 · Pflege-Upsell",f7v:"Gleicher Termin → Pflegeabonnement anbieten (Einkauf, Apotheke, Reinigung) → Provision",
+  sh_costs:"// BETRIEBSKOSTEN",
+  c1:"Plattform / VPS",c2:"KI-Agent Credits",c3:"Werbeausgaben (Lead-Gen)",c3v:"€3.000–€8.000 / Monat",
+  c4:"Admin (1 Person)",c5:"Plattformmanager (1 Person)",c6:"Feldpartner (pro Besuch)",
+  c6v:"Provisionsbasiert — keine Vorabkosten",c7:"Notar (pro Vertrag)",
+  sh_camp:"// DREI KI-KAMPAGNEN — ALLE GLEICHZEITIG",
+  camp1t:"Eingehend Verbraucher",camp1tg:"Einwilligende ältere Eigentümer · Warme Leads aus Anzeigen",
+  c1s:"Quelle:",c1sv:"Google PPC · Facebook · Social Media",c1g:"Ziel:",c1gv:"Hausbesuchstermin buchen",
+  c1l:"Rechtlich:",c1lv:"Einwilligungsbasiert · DSGVO-konform",c1stat:"~20–30%",c1sl:"Lead-zu-Termin-Rate",
+  camp2t:"Feldpartner-Akquise",camp2tg:"Pflegedienste · Notare · Feldagenten · B2B Kalt",
+  c2s:"Quelle:",c2sv:"Öffentliche Verzeichnisse · LinkedIn · Handelsregister",c2g:"Ziel:",c2gv:"Als Doppelrolle-Feldpartner gewinnen",
+  c2l:"Rechtlich:",c2lv:"B2B Kaltanruf · Vollständig legal in DE/FR/IT",c2stat:"Massenhaft",c2sl:"100% Landesabdeckung",
+  camp3t:"Investmentfonds-Ansprache",camp3tg:"Hedgefonds · Immobilienfonds · Private Equity · B2B",
+  c3s:"Quelle:",c3sv:"Fondsdatenbanken · Entscheider-Listen",c3g:"Ziel:",c3gv:"Fondspartnerschaftsvertrag unterzeichnen",
+  c3l:"Rechtlich:",c3lv:"B2B · UWG §7 legal · FR/IT erlaubt",c3stat:"Gezielt",c3sl:"Entscheiderebene",
+  sh_dial:"// KI-DIALER SKALIERUNG",
+  per_ag:"PRO AGENT (Verbraucherkampagne)",b2b_scale:"B2B-KAMPAGNEN (Fonds + Partner)",
+  sh_part:"// PARTNERSTRUKTUR — ZWEI TYPEN, BEIDE PROVISIONSBASIERT",
+  p1label:"PARTNER 1 — INVESTMENTFONDS",p1name:"Leibrenten / Viager-Käufer",
+  p1desc:"Hedgefonds, Immobilieninvestmentfonds, Private Equity — sie kaufen die von uns originierten Verträge und halten die Immobilie als einkommenserzeugendes Vermögen.",
+  p1rl:"Rolle",p1rv:"Unterzeichnete Verträge von uns kaufen",p1pl:"Wir zahlen ihnen",p1pv:"Nichts",
+  p1el:"Sie zahlen uns",p1ev:"15–20% des Vertragspreises — verhandelte Originierungsgebühr",p1al:"KI-Kampagne",p1av:"Kampagne 03 — gezielte B2B-Kaltansprache",
+  p2label:"PARTNER 2 — FELDPARTNER (DOPPELROLLE)",p2name:"Feldagent + Pflegedienst-Anbieter",
+  p2desc:"Ein Partner (oder zwei Spezialisten), der den Hausbesuch übernimmt — rechtliche Vertragsunterzeichnung beim Notar UND optionale Pflegeabonnement-Anmeldung beim selben Termin.",
+  p2ra:"ROLLE A — VERTRAGSUNTERZEICHNUNG",p2a1k:"Aufgaben",p2a1v:"Hausbesuch · Notar · Unterschrift · Rechtsübertragung",
+  p2a2k:"Wir zahlen ihnen",p2a2v:"Feste Vergütung pro unterzeichnetem Vertrag",
+  p2rb:"ROLLE B — PFLEGEDIENSTE (OPTIONALER UPSELL)",p2b1k:"Dienste",p2b1v:"Einkauf · Apotheke · Reinigung · Gesellschaft",
+  p2b2k:"Modell",p2b2v:"Monatliches Abonnement durch den Senior",p2b3k:"Wir verdienen",p2b3v:"20–30% Empfehlungsprovision / Monat wiederkehrend",
+  sh_leg:"// RECHTSRAHMEN",th_item:"PUNKT",th_de:"DEUTSCHLAND",th_fr:"FRANKREICH",th_it:"ITALIEN",
+  leg1:"KI-Anrufe Verbraucher",leg2:"B2B Kaltanrufe (Fonds/Partner)",leg3:"Leibrenten / Viager-Vertrag",leg4:"DSGVO-Risiko",
+  ok:"Legal ✓",none:"B2B = keines",
+  sh_rev:"// EINNAHMEQUELLEN — ZWEI QUELLEN, BEIDE WACHSEND",
+  th_stream:"QUELLE",th_trigger:"AUSLÖSER",th_who:"WER ZAHLT UNS",th_amount:"BETRAG",th_type:"TYP",
+  r1n:"Vertragsprovision",r1t:"Fonds kauft unterzeichneten Vertrag",r1w:"Investmentfonds",r1a:"15–20% des Vertragspreises (Originierungsgebühr)",
+  r2n:"Pflegedienst-Empfehlung",r2t:"Senior abonniert Pflegedienste",r2w:"Pflegepartner",r2a:"20–30% des Monatsabonnements",
+  t_one:"einmalig",t_rec:"wiederkehrend",
+  sh_deal:"// VERTRAGSRECHNUNG PRO UNTERZEICHNETEM VERTRAG",avg_prop:"DURCHSCHN. IMMOBILIENWERTE",per_contract:"UNSERE PROVISION PRO VERTRAG",blended:"Gewichteter Durchschnitt",blended_c:"Gewichteter Durchschnitt",
+  sh_care:"// PFLEGEDIENST-EINNAHMEN — WIEDERKEHREND",
+  cs1k:"Monatsabonnement (vom Senior bezahlt)",cs2k:"Unser Anteil (25% Durchschn.)",cs3k:"Adoptionsrate beim Hausbesuch",
+  cs4k:"Nach 100 unterzeichneten Verträgen",cs5k:"Nach 500 unterzeichneten Verträgen",
+  sh_mkt:"// PHASE-1-MÄRKTE — DEUTSCHLAND → FRANKREICH → ITALIEN",eh_65:"ältere Hauseigentümer (65+)",
+  de_name:"Deutschland · Phase 1",de1:"Durchschn. Immobilienwert: €330.000",de2:"Leibrente: rechtlich etabliertes Produkt",de3:"KI B2B-Anrufe: legal (UWG §7)",de4:"Sprache: Deutscher KI-Agent",de5:"Fondsziele: ~4.200 Fonds",
+  fr_name:"Frankreich · Phase 2",fr1:"Durchschn. Immobilienwert: €290.000",fr2:"Viager: kulturell akzeptiert, wachsend",fr3:"KI B2B-Anrufe: legal",fr4:"Sprache: Französischer KI-Agent",fr5:"Fondsziele: ~3.100 Fonds",
+  it_name:"Italien · Phase 3",it1:"Durchschn. Immobilienwert: €220.000",it2:"Vendita con Riserva: legal",it3:"KI B2B-Anrufe: legal",it4:"Sprache: Italienischer KI-Agent",it5:"Fondsziele: ~2.400 Fonds",
+  sh_tam:"// GESAMTADRESSIERBARER MARKT",
+  tam1k:"Gesamte ältere Hauseigentümer (DE+FR+IT)",tam2k:"Durchschn. Vertragswert (für Fonds)",
+  tam3k:"Bei 0,01% des TAM (2.950 Verträge)",tam4k:"Anzurufende Investmentfonds (gesamt)",tam5k:"Zu kontaktierende Pflegedienste (gesamt)",
+  sh_proj:"// FINANZPROGNOSEN — PHASE FÜR PHASE",
+  th_ph:"PHASE",th_mkt2:"MARKT",th_ads:"WERBUNG/MONAT",th_leads:"LEADS/MONAT",th_appts:"TERMINE/MONAT",
+  th_contr:"VERTRÄGE/MONAT",th_comm:"VERTRAGSEINNAHMEN",th_care:"PFLEGEEINNAHMEN",th_net:"NETTO / MONAT",
+  ph1:"Monat 1–3",ph2:"Monat 4–6",ph3:"Monat 7–9",ph4:"Monat 10–12",
+  sh_ann:"// JAHRESÜBERSICHT — JAHR 1",
+  yr_c:"Verträge Jahr 1",yr_cs:"unterzeichnet & an Fonds verkauft",yr_r:"Vertragseinnahmen",yr_rs:"aus Fondsprovision",
+  yr_ca:"Pflege-ARR",yr_cas:"passiv wiederkehrend am Jahresende",yr_n:"Netto Jahr 1",yr_ns:"nach allen Betriebskosten",
+  note_proj:"// Basiert auf: €10K Durchschn.-Provision · 25% Lead→Termin · 35% Termin→Vertrag · 40% Pflegeadoption.",
+  sh_tba:"// SCHLÜSSELFERTIGER UNTERNEHMENSKAUF — DREI PREISSTUFEN",
+  tba_what:"WAS WIR VERKAUFEN",
+  tba_body:"Ein vollständig betriebsbereites, einsatzbereites Maklergeschäft für Leibrenten — komplett mit KI-Plattform, Lead-Pipeline, Partnerlisten, Fondskontakten und Business-Blueprint. Wir behalten 20% Netto und übernehmen den technischen + kommerziellen Betrieb.",
+  t1l:"Stufe 1 — Nur Blueprint",t1v:"15.000–30.000 $",
+  t1d:"Dokumentation + Kontakte. Keine Plattform. Keine Pipeline. Investor baut alles selbst.",
+  t1i1:"Vollständige Geschäftsmodell-Dokumentation",t1i2:"B2B-Kontaktlisten (Fonds + Pflege)",t1i3:"SOP + Workflow-Dokumentation",
+  t1x1:"KI-Plattform nicht enthalten",t1x2:"Pipeline nicht enthalten",t1x3:"Kein technischer Support",
+  t2l:"Stufe 2 — Plattform + Listen + Blueprint",t2v:"80.000–150.000 $",t2badge:"WO WIR STEHEN",
+  t2d:"Vollständiges Schlüsselfertig-Paket. Plattform gebaut, getestet, bereit zum Anschluss. Alle Listen. Vollständige Dokumentation. Wir bleiben als 20%-Partner.",
+  t2i1:"Vollständige Dokumentation + SOP",t2i2:"B2B-Listen: ~9.700 Fonds + ~85.000 Pflegedienste",
+  t2i3:"KI-Plattform gebaut & getestet",t2i4:"3 KI-Kampagnenskripte (DE/FR/IT)",
+  t2i5:"CRM + Lead-Pipeline konfiguriert",t2i6:"Wir behalten 20% — Tech + Kommerziell",
+  t3l:"Stufe 3 — Bewiesene Einnahmen",t3v:"300.000–500.000 $+",
+  t3d:"Alles aus Stufe 2 + bereits abgeschlossene und an Fonds verkaufte Verträge. Einnahmen nachgewiesen.",
+  t3i1:"Alles aus Stufe 2",t3i2:"5–10 bereits unterzeichnete Verträge",t3i3:"Bewiesene Fondszahlungshistorie",
+  t3i4:"Aktive Pflegedienst-Pipeline",t3i5:"Bewiesene KI-Kampagnenleistung",t3i6:"Wir behalten 20% — cashflow ab Tag 1",
+  sh_split:"// VERANTWORTUNGSAUFTEILUNG",
+  we_side:"WIR ÜBERNEHMEN (20% NETTO)",
+  we1:"Plattform-Uptime + KI-Agent-Management",we2:"KI-Kampagnenmanagement (alle 3)",
+  we3:"Lead-Pipeline + CRM-Betrieb",we4:"Technischer Support + Updates",we5:"Kommerzielle Beziehung mit Fonds",
+  inv_side:"INVESTOR ÜBERNIMMT (80%)",
+  inv1:"Feldpartner-Management",inv2:"Notarielle + rechtliche Operationen",
+  inv3:"Werbebudget-Einsatz",inv4:"Verwaltungspersonal (2 Personen)",inv5:"Alle nicht-technischen Operationen",
+  sb_pow:"Betrieben von Motely Peers FZCO · Dubai, VAE",sb_market:"DE → FR → IT",sb_model:"LEIBRENTE · VIAGER",sb_retain:"WIR BEHALTEN: 20% NETTO",
+},
+it:{
+  nav_sys:"sistema",nav_ov:"panoramica",nav_camp:"campagne",nav_part:"partner",
+  nav_fin:"finanze",nav_rev:"ricavi",nav_mkt:"mercati",nav_proj:"proiezioni",
+  nav_inv:"investitore",nav_tba:"pitch TBA",
+  sh_ov:"// ALOALO — PANORAMICA DEL SISTEMA",
+  co_what:"COSA FACCIAMO",
+  co_body:"Generiamo lead consentiti di anziani proprietari di casa tramite inserzioni, li qualifichiamo con l'IA, inviamo partner sul campo per firmare contratti Viager/Leibrente a domicilio, poi vendiamo quei contratti a fondi d'investimento per una commissione — proponendo servizi di cura alla stessa visita.",
+  s1l:"Anziani Proprietari",s1s:"DE + FR + IT combinati",s2l:"Campagne IA",s2s:"consumatori · partner · fondi",
+  s3l:"Commissione Media",s3s:"per contratto firmato",s4l:"Fonti di Ricavo",s4s:"contratto + servizi di cura",
+  s5l:"Organico",s5s:"admin + responsabile piattaforma",s6l:"Chiamate IA",s6s:"senza interruzioni",
+  sh_flow:"// COME SI SVOLGE UN AFFARE",
+  f1k:"01 · Annuncio",f1v:"Google / Facebook / Social → l'anziano proprietario vede l'annuncio",
+  f2k:"02 · Modulo",f2v:"Il proprietario compila il modulo → dà il consenso → entra nella nostra pipeline",
+  f3k:"03 · Chiamata IA",f3v:"L'agente IA chiama 24/7, qualifica l'interesse, prenota un appuntamento a domicilio",
+  f4k:"04 · Visita a Domicilio",f4v:"Il partner sul campo visita la casa — spiega il contratto, costruisce fiducia",
+  f5k:"05 · Firma Notarile",f5v:"Il notaio firma il contratto Viager → la proprietà viene trasferita a noi",
+  f6k:"06 · Vendita al Fondo",f6v:"Vendiamo il contratto al fondo → incassiamo la commissione (3–4% del valore)",
+  f7k:"07 · Upsell Cure",f7v:"Stessa visita → offriamo abbonamento ai servizi di cura → commissione di referral",
+  sh_costs:"// COSTI OPERATIVI",
+  c1:"Piattaforma / VPS",c2:"Crediti Agente IA",c3:"Spesa Pubblicitaria (lead gen)",c3v:"€3.000–€8.000 / mese",
+  c4:"Admin (1 persona)",c5:"Responsabile Piattaforma (1 persona)",c6:"Partner sul Campo (per visita)",
+  c6v:"Solo commissione — nessun costo anticipato",c7:"Notaio (per contratto)",
+  sh_camp:"// TRE CAMPAGNE IA — TUTTE SIMULTANEE",
+  camp1t:"Entrata Consumatori",camp1tg:"Anziani proprietari consenzienti · Lead caldi dagli annunci",
+  c1s:"Fonte:",c1sv:"Google PPC · Facebook · Social Media",c1g:"Obiettivo:",c1gv:"Prenotare appuntamento a domicilio",
+  c1l:"Legale:",c1lv:"Basato su consenso · Conforme GDPR",c1stat:"~20–30%",c1sl:"tasso lead → appuntamento",
+  camp2t:"Acquisizione Partner sul Campo",camp2tg:"Società di cura · Notai · Agenti · B2B freddo",
+  c2s:"Fonte:",c2sv:"Directory pubbliche · LinkedIn · Registri commerciali",c2g:"Obiettivo:",c2gv:"Firmare come partner doppio ruolo",
+  c2l:"Legale:",c2lv:"Chiamata B2B fredda · Legale in DE/FR/IT",c2stat:"Massivo",c2sl:"copertura 100% del paese",
+  camp3t:"Prospecting Fondi d'Investimento",camp3tg:"Hedge fund · Fondi immobiliari · Private equity · B2B",
+  c3s:"Fonte:",c3sv:"Database fondi · Liste decisori",c3g:"Obiettivo:",c3gv:"Firmare accordo di partnership con il fondo",
+  c3l:"Legale:",c3lv:"B2B · permesso DE/FR/IT",c3stat:"Mirato",c3sl:"livello decisore",
+  sh_dial:"// SCALA DEL DIALER IA",
+  per_ag:"PER AGENTE (campagna consumatori)",b2b_scale:"CAMPAGNE B2B (fondi + partner)",
+  sh_part:"// STRUTTURA PARTNER — DUE TIPI, ENTRAMBI A COMMISSIONE",
+  p1label:"PARTNER 1 — FONDI D'INVESTIMENTO",p1name:"Acquirenti Viager / Leibrente",
+  p1desc:"Hedge fund, fondi immobiliari, private equity — acquistano i contratti che originiamo e detengono l'immobile come asset redditizio.",
+  p1rl:"Ruolo",p1rv:"Acquistare i contratti firmati da noi",p1pl:"Noi paghiamo loro",p1pv:"Niente",
+  p1el:"Loro ci pagano",p1ev:"15–20% del prezzo del contratto — commissione negoziata",p1al:"Campagna IA",p1av:"Campagna 03 — prospecting B2B freddo mirato",
+  p2label:"PARTNER 2 — PARTNER SUL CAMPO (DOPPIO RUOLO)",p2name:"Agente sul Campo + Fornitore Servizi di Cura",
+  p2desc:"Un unico partner (o due specialisti) che gestisce la visita a domicilio — firma legale del contratto con il notaio E iscrizione opzionale ai servizi di cura nello stesso appuntamento.",
+  p2ra:"RUOLO A — FIRMA DEL CONTRATTO",p2a1k:"Compiti",p2a1v:"Visita · Notaio · Firma · Trasferimento legale",
+  p2a2k:"Noi paghiamo loro",p2a2v:"Compenso fisso per contratto firmato",
+  p2rb:"RUOLO B — SERVIZI DI CURA (UPSELL OPZIONALE)",p2b1k:"Servizi",p2b1v:"Spesa · Farmacia · Pulizie · Compagnia",
+  p2b2k:"Modello",p2b2v:"Abbonamento mensile dall'anziano",p2b3k:"Guadagniamo",p2b3v:"20–30% commissione di referral / mese ricorrente",
+  sh_leg:"// QUADRO LEGALE",th_item:"ELEMENTO",th_de:"GERMANIA",th_fr:"FRANCIA",th_it:"ITALIA",
+  leg1:"Chiamate IA consumatori",leg2:"Chiamate B2B fredde (fondi/partner)",leg3:"Contratto Viager / Leibrente",leg4:"Esposizione GDPR",
+  ok:"Legale ✓",none:"B2B = nessuna",
+  sh_rev:"// FONTI DI RICAVO — DUE FONTI, ENTRAMBE IN CRESCITA",
+  th_stream:"FONTE",th_trigger:"INNESCO",th_who:"CHI CI PAGA",th_amount:"IMPORTO",th_type:"TIPO",
+  r1n:"Commissione Contratto",r1t:"Il fondo acquista il contratto firmato",r1w:"Fondo d'Investimento",r1a:"15–20% del prezzo del contratto (commissione di origination)",
+  r2n:"Referral Servizi di Cura",r2t:"L'anziano si abbona ai servizi di cura",r2w:"Partner di Cura",r2a:"20–30% dell'abbonamento mensile",
+  t_one:"una tantum",t_rec:"ricorrente",
+  sh_deal:"// CALCOLO PER CONTRATTO FIRMATO",avg_prop:"VALORI MEDI DEGLI IMMOBILI",per_contract:"NOSTRA COMMISSIONE PER CONTRATTO",blended:"Media ponderata",blended_c:"Media ponderata",
+  sh_care:"// RICAVI SERVIZI DI CURA — RICORRENTI",
+  cs1k:"Abbonamento mensile (pagato dall'anziano)",cs2k:"Nostra quota (25% medio)",cs3k:"Tasso di adozione alla visita",
+  cs4k:"Dopo 100 contratti firmati",cs5k:"Dopo 500 contratti firmati",
+  sh_mkt:"// MERCATI FASE 1 — GERMANIA → FRANCIA → ITALIA",eh_65:"anziani proprietari (65+)",
+  de_name:"Germania · Fase 1",de1:"Valore medio immobile: €330.000",de2:"Leibrente: prodotto legalmente stabilito",de3:"Chiamate B2B IA: legale (UWG §7)",de4:"Lingua: agente IA tedesco",de5:"Target fondi: ~4.200 fondi",
+  fr_name:"Francia · Fase 2",fr1:"Valore medio immobile: €290.000",fr2:"Viager: culturalmente accettato, in crescita",fr3:"Chiamate B2B IA: legale",fr4:"Lingua: agente IA francese",fr5:"Target fondi: ~3.100 fondi",
+  it_name:"Italia · Fase 3",it1:"Valore medio immobile: €220.000",it2:"Vendita con Riserva: legale",it3:"Chiamate B2B IA: legale",it4:"Lingua: agente IA italiano",it5:"Target fondi: ~2.400 fondi",
+  sh_tam:"// MERCATO TOTALE INDIRIZZABILE",
+  tam1k:"Totale anziani proprietari (DE+FR+IT)",tam2k:"Valore medio contratto (per il fondo)",
+  tam3k:"Se firmiamo 0,01% del TAM (2.950 contratti)",tam4k:"Fondi d'investimento da contattare (totale)",tam5k:"Società di cura da contattare (totale)",
+  sh_proj:"// PROIEZIONI FINANZIARIE — FASE PER FASE",
+  th_ph:"FASE",th_mkt2:"MERCATO",th_ads:"PUB/MESE",th_leads:"LEAD/MESE",th_appts:"APPUNT/MESE",
+  th_contr:"CONTRATTI/MESE",th_comm:"RIC. CONTRATTI",th_care:"RIC. CURE",th_net:"NETTO / MESE",
+  ph1:"Mesi 1–3",ph2:"Mesi 4–6",ph3:"Mesi 7–9",ph4:"Mesi 10–12",
+  sh_ann:"// RIEPILOGO ANNUALE — ANNO 1",
+  yr_c:"Contratti Anno 1",yr_cs:"firmati e venduti ai fondi",yr_r:"Ricavi Contratti",yr_rs:"da commissioni fondi",
+  yr_ca:"ARR Cure",yr_cas:"ricorrente passivo a fine anno",yr_n:"Netto Anno 1",yr_ns:"dopo tutti i costi operativi",
+  note_proj:"// Basato su: €10K comm. media · 25% lead→appunt · 35% appunt→contratto · 40% adozione cure.",
+  sh_tba:"// ACQUISIZIONE CHIAVI IN MANO — TRE LIVELLI DI PREZZO",
+  tba_what:"COSA VENDIAMO",
+  tba_body:"Un'agenzia di intermediazione contratti per anziani proprietari completamente operativa e pronta all'uso — con piattaforma IA, pipeline di lead, liste partner, contatti fondi e business blueprint. Tratteniamo il 20% netto e gestiamo tutte le operazioni tecniche + commerciali.",
+  t1l:"Livello 1 — Solo Blueprint",t1v:"$15.000–$30.000",
+  t1d:"Documentazione + contatti. Nessuna piattaforma. Nessuna pipeline. L'investitore costruisce tutto da solo.",
+  t1i1:"Documentazione completa del modello",t1i2:"Liste B2B (fondi + cure)",t1i3:"SOP + documentazione workflow",
+  t1x1:"Piattaforma IA non inclusa",t1x2:"Pipeline non inclusa",t1x3:"Nessun supporto tecnico",
+  t2l:"Livello 2 — Piattaforma + Liste + Blueprint",t2v:"$80.000–$150.000",t2badge:"DOVE SIAMO ORA",
+  t2d:"Pacchetto chiavi in mano completo. Piattaforma costruita, testata, pronta ad essere connessa. Tutte le liste. Documentazione completa. Rimaniamo come partner al 20%.",
+  t2i1:"Documentazione completa + SOP",t2i2:"Liste B2B: ~9.700 fondi + ~85.000 società di cura",
+  t2i3:"Piattaforma IA costruita e testata",t2i4:"3 script campagna IA (DE/FR/IT)",
+  t2i5:"CRM + pipeline configurati",t2i6:"Tratteniamo 20% — tech + commerciale",
+  t3l:"Livello 3 — Ricavi Dimostrati",t3v:"$300.000–$500.000+",
+  t3d:"Tutto del Livello 2 + contratti già firmati e venduti ai fondi. Ricavi dimostrati. Rischio ridotto.",
+  t3i1:"Tutto del Livello 2",t3i2:"5–10 contratti già firmati",t3i3:"Storico pagamenti fondi dimostrato",
+  t3i4:"Pipeline attiva servizi di cura",t3i5:"Performance campagna IA dimostrata",t3i6:"Tratteniamo 20% — cashflow dal giorno 1",
+  sh_split:"// RIPARTIZIONE DELLE RESPONSABILITÀ",
+  we_side:"GESTIAMO NOI (20% NETTO)",
+  we1:"Uptime piattaforma + gestione agenti IA",we2:"Gestione 3 campagne IA",
+  we3:"Pipeline lead + operazioni CRM",we4:"Supporto tecnico + aggiornamenti",we5:"Relazione commerciale con i fondi",
+  inv_side:"GESTISCE L'INVESTITORE (80%)",
+  inv1:"Gestione partner sul campo",inv2:"Operazioni notarili + legali",
+  inv3:"Impiego del budget pubblicitario",inv4:"Personale amministrativo (2 persone)",inv5:"Tutte le operazioni non tecniche",
+  sb_pow:"Alimentato da Motely Peers FZCO · Dubai, EAU",sb_market:"DE → FR → IT",sb_model:"LEIBRENTE · VIAGER",sb_retain:"TRATTENIAMO: 20% NETTO",
+}
+};
+
+let lang='en', dark=false;
+
+function setLang(l){
+  lang=l;
+  document.querySelectorAll('.lb').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.lb[onclick="setLang('${l}')"]`).classList.add('active');
+  const t=T[l];
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    const v=t[el.getAttribute('data-k')];
+    if(v!==undefined) el.textContent=v;
+  });
+}
+
+function toggleTheme(){
+  dark=!dark;
+  document.body.classList.toggle('dark',dark);
+  document.getElementById('tbtn').textContent=dark?'☀ Light':'☾ Dark';
+}
+
+const panels=['overview','campaigns','partners','revenue','markets','projections','tba'];
+function go(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  document.querySelectorAll('.sb-item')[panels.indexOf(id)].classList.add('active');
+  document.getElementById('sb-panel').textContent=id.toUpperCase();
+  document.querySelector('.content').scrollTop=0;
+}
+</script>
+</body>
+</html>
